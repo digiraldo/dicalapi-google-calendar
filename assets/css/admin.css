@@ -1,0 +1,103 @@
+/**
+ * Estilos para la página de administración
+ */
+.dicalapi-shortcode-info,
+.dicalapi-url-custom-info,
+.dicalapi-preview-section {
+    margin-top: 30px;
+    background: #fff;
+    border-left: 4px solid #007cba;
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);
+    padding: 15px;
+}
+
+.dicalapi-url-custom-info {
+    border-left-color: #46b450;
+}
+
+.dicalapi-preview-section {
+    border-left-color: #ff6f00;
+}
+
+.dicalapi-shortcode-info h2,
+.dicalapi-url-custom-info h2,
+.dicalapi-preview-section h2 {
+    margin-top: 0;
+    color: #23282d;
+}
+
+.dicalapi-shortcode-info code,
+.dicalapi-url-custom-info code {
+    display: inline-block;
+    background: #f0f0f1;
+    padding: 5px 10px;
+    margin: 5px 0;
+    border-radius: 3px;
+    font-size: 13px;
+}
+
+.dicalapi-url-custom-info ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+/* Ajustes para los campos de color y tamaño */
+.dicalapi-color-picker {
+    width: 80px !important;
+}
+
+.form-table td label {
+    margin-right: 10px;
+    display: inline-block;
+    min-width: 60px;
+}
+
+/* Espaciado entre los campos */
+.form-table input[type="text"] {
+    margin: 0 10px 0 0;
+}
+
+/* Estilos para la vista previa */
+.dicalapi-preview-section .dicalapi-gcalendar-container {
+    max-width: 800px;
+}
+
+/* Estilos para el control de sombras */
+.dicalapi-shadow-control {
+    margin-bottom: 15px;
+}
+
+.dicalapi-shadow-presets,
+.dicalapi-shadow-custom {
+    margin-bottom: 10px;
+}
+
+.dicalapi-shadow-preview {
+    margin-top: 15px;
+}
+
+#dicalapi-shadow-preview-box {
+    background: white;
+    border-radius: 6px;
+    padding: 20px;
+    width: 200px;
+    text-align: center;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    transition: all 0.3s ease;
+}
+
+/* Espacio entre controles */
+.dicalapi-shadow-control label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+/* Estilo cuando se selecciona "Personalizada" */
+.dicalapi-shadow-custom {
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border-left: 3px solid #007cba;
+}

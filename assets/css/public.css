@@ -1,0 +1,204 @@
+/**
+ * Estilos adicionales para el frontend
+ */
+
+/* Estilos básicos para el contenedor principal */
+.dicalapi-gcalendar-container {
+    width: 100%;
+    margin: 20px 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    box-sizing: border-box;
+}
+
+/* Estilos para cada evento */
+.dicalapi-gcalendar-event {
+    display: flex;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+    width: 100%;
+}
+
+/* Columna de fechas */
+.dicalapi-gcalendar-date-column {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-width: 80px;
+    width: 15%;
+    max-width: 120px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+/* Columna de contenido */
+.dicalapi-gcalendar-content-column {
+    padding: 15px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 65%;
+    box-sizing: border-box;
+}
+
+/* Columna de inscripción */
+.dicalapi-gcalendar-signup-column {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-width: 100px;
+    width: 20%;
+    max-width: 150px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+/* Estilos para el día y mes */
+.dicalapi-gcalendar-day {
+    font-weight: bold;
+    line-height: 1.2;
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+.dicalapi-gcalendar-month {
+    margin-bottom: 8px;
+    line-height: 1.2;
+    display: block;
+    width: 100%;
+    text-align: center;
+}
+
+/* Estilos para título, descripción y ubicación */
+.dicalapi-gcalendar-title {
+    margin: 0 0 10px;
+    text-align: center;
+    width: 100%;
+}
+
+.dicalapi-gcalendar-description {
+    margin-bottom: 10px;
+    text-align: center;
+    width: 100%;
+}
+
+.dicalapi-gcalendar-location {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.dicalapi-gcalendar-location .dashicons {
+    margin-right: 5px;
+}
+
+/* Estilos del botón de inscripción */
+.dicalapi-gcalendar-signup-button {
+    display: inline-block;
+    padding: 8px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.dicalapi-gcalendar-signup-button:hover {
+    transform: translateY(-2px);
+}
+
+/* Estilos para el ticker de títulos */
+.dicalapi-gcalendar-ticker-container {
+    width: 100%;
+    position: relative;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.dicalapi-gcalendar-ticker-wrapper {
+    margin: 0 auto;
+    width: 100%;
+    text-align: center;
+}
+
+.dicalapi-gcalendar-ticker-viewport {
+    margin: 0 auto;
+    text-align: center;
+}
+
+.dicalapi-gcalendar-ticker-list {
+    position: relative;
+    margin: 0 auto;
+    width: 100%;
+    text-align: center;
+}
+
+.dicalapi-gcalendar-ticker-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+}
+
+.dicalapi-gcalendar-title-text {
+    display: inline-block;
+    text-align: center;
+    margin-right: 3px; /* Añadir margen derecho al título */
+}
+
+.dicalapi-gcalendar-title-dates {
+    display: inline-block;
+    text-align: center;
+    margin-left: 3px; /* Aumentar el margen izquierdo */
+}
+
+/* Responsividad */
+@media (max-width: 767px) {
+    .dicalapi-gcalendar-event {
+        flex-direction: column;
+    }
+    
+    .dicalapi-gcalendar-date-column,
+    .dicalapi-gcalendar-content-column,
+    .dicalapi-gcalendar-signup-column {
+        width: 100%;
+        max-width: none;
+    }
+    
+    .dicalapi-gcalendar-signup-button {
+        width: 80%;
+        padding: 10px;
+    }
+    
+    .dicalapi-gcalendar-ticker-item {
+        flex-direction: column;
+    }
+    
+    .dicalapi-gcalendar-title-dates {
+        margin-left: 0;
+        margin-top: 5px;
+    }
+}
+
+/* Asegurarse que la dashicon se cargue */
+@font-face {
+    font-family: "dashicons";
+    src: url("../../../wp-includes/fonts/dashicons.eot");
+    src: url("../../../wp-includes/fonts/dashicons.eot?#iefix") format("embedded-opentype"),
+         url("../../../wp-includes/fonts/dashicons.woff") format("woff"),
+         url("../../../wp-includes/fonts/dashicons.ttf") format("truetype"),
+         url("../../../wp-includes/fonts/dashicons.svg#dashicons") format("svg");
+    font-weight: normal;
+    font-style: normal;
+}
