@@ -2,10 +2,10 @@
 Contributors: digiraldo
 Tags: google calendar, eventos, calendar, gcal, shortcode
 Requires at least: 5.2
-Tested up to: 6.4
+Tested up to: 6.7
 Requires PHP: 7.0
 Stable tag: 1.0.0
-License: GPLv2 or later
+License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Muestra eventos de Google Calendar en tu sitio de WordPress con diseño personalizable y animaciones.
@@ -38,6 +38,10 @@ DICALAPI Google Calendar Events es un plugin que permite mostrar eventos de Goog
 * Colores y tamaños para textos (títulos, descripciones, fechas)
 * Intervalo de rotación para el ticker de títulos
 * URL de inscripción predeterminada y por evento
+
+= Licencia =
+
+Este plugin está licenciado bajo GPL v2 o posterior. Esto significa que puedes compartirlo y modificarlo libremente, asegurando que las versiones modificadas también se compartan bajo la misma licencia.
 
 == Installation ==
 

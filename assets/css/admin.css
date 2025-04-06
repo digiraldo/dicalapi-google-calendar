@@ -9,6 +9,8 @@
     border-left: 4px solid #007cba;
     box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);
     padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
 }
 
 .dicalapi-url-custom-info {
@@ -17,6 +19,9 @@
 
 .dicalapi-preview-section {
     border-left-color: #ff6f00;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
 }
 
 .dicalapi-shortcode-info h2,
@@ -29,9 +34,10 @@
 .dicalapi-shortcode-info code,
 .dicalapi-url-custom-info code {
     display: inline-block;
-    background: #f0f0f1;
-    padding: 5px 10px;
+    background: #f7f7f7;
+    padding: 8px 12px;
     margin: 5px 0;
+    border: 1px solid #ddd;
     border-radius: 3px;
     font-size: 13px;
 }
@@ -43,13 +49,17 @@
 
 /* Ajustes para los campos de color y tamaño */
 .dicalapi-color-picker {
-    width: 80px !important;
+    max-width: 100px;
 }
 
 .form-table td label {
     margin-right: 10px;
     display: inline-block;
     min-width: 60px;
+}
+
+input[type="text"].regular-text {
+    width: 25em;
 }
 
 /* Espaciado entre los campos */
@@ -64,6 +74,7 @@
 
 /* Estilos para el control de sombras */
 .dicalapi-shadow-control {
+    margin-top: 10px;
     margin-bottom: 15px;
 }
 
@@ -72,19 +83,33 @@
     margin-bottom: 10px;
 }
 
+.dicalapi-shadow-presets select {
+    min-width: 250px;
+}
+
 .dicalapi-shadow-preview {
     margin-top: 15px;
 }
 
-#dicalapi-shadow-preview-box {
-    background: white;
-    border-radius: 6px;
-    padding: 20px;
-    width: 200px;
+.dicalapi-shadow-preview #dicalapi-shadow-preview-box {
+    background: #fff;
+    border-radius: 4px;
+    padding: 15px;
+    width: 300px;
     text-align: center;
-    margin: 10px 0;
+    margin-top: 8px;
     border: 1px solid #ddd;
     transition: all 0.3s ease;
+}
+
+.dicalapi-shadow-custom {
+    margin-top: 10px;
+    padding-top: 10px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border-left: 3px solid #007cba;
+    border-top: 1px solid #eee;
 }
 
 /* Espacio entre controles */
@@ -92,12 +117,4 @@
     display: block;
     margin-bottom: 5px;
     font-weight: 500;
-}
-
-/* Estilo cuando se selecciona "Personalizada" */
-.dicalapi-shadow-custom {
-    padding: 10px;
-    background: #f9f9f9;
-    border-radius: 4px;
-    border-left: 3px solid #007cba;
 }

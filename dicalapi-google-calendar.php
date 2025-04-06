@@ -10,7 +10,7 @@
  * Author URI:        https://github.com/digiraldo
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       dicalapi-gcalendar
+ * Text Domain:       dicalapi-google-calendar-events
  * Domain Path:       /languages
  */
 
@@ -30,7 +30,7 @@ define('DICALAPI_GCALENDAR_PLUGIN_BASENAME', plugin_basename(__FILE__));
  * Cargar archivo de textdomain para traducciones
  */
 function dicalapi_gcalendar_load_textdomain() {
-    load_plugin_textdomain('dicalapi-gcalendar', false, dirname(plugin_basename(__FILE__)) . '/languages/');
+    load_plugin_textdomain('dicalapi-google-calendar-events', false, dirname(plugin_basename(__FILE__)) . '/languages/');
 }
 add_action('plugins_loaded', 'dicalapi_gcalendar_load_textdomain');
 

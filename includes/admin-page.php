@@ -8,35 +8,69 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-// Agregar menú en el panel de administración
+/**
+ * Registrar scripts y estilos para el admin
+ */
+function dicalapi_gcalendar_admin_scripts($hook) {
+    // Solo cargar en la página de nuestro plugin
+    if ($hook != 'settings_page_dicalapi_gcalendar') {
+        return;
+    }
+    
+    // Cargar color picker de WordPress
+    wp_enqueue_style('wp-color-picker');
+    wp_enqueue_script('wp-color-picker');
+    
+    // Cargar nuestros estilos y scripts
+    wp_enqueue_style('dicalapi-gcalendar-admin', DICALAPI_GCALENDAR_PLUGIN_URL . 'assets/css/admin.css', array(), DICALAPI_GCALENDAR_VERSION);
+    wp_enqueue_script('dicalapi-gcalendar-admin', DICALAPI_GCALENDAR_PLUGIN_URL . 'assets/js/admin.js', array('jquery', 'wp-color-picker'), DICALAPI_GCALENDAR_VERSION, true);
+    
+    // Cargar Dashicons para iconos
+    wp_enqueue_style('dashicons');
+}
+add_action('admin_enqueue_scripts', 'dicalapi_gcalendar_admin_scripts');
+
+/**
+ * Registrar la página de opciones del plugin
+ */
 function dicalapi_gcalendar_add_admin_menu() {
     add_options_page(
-        'DICALAPI Google Calendar', 
-        'Google Calendar', 
-        'manage_options', 
-        'dicalapi-gcalendar-settings', 
-        'dicalapi_gcalendar_settings_page'
+        __('Configuración de Google Calendar', 'dicalapi-google-calendar-events'),
+        __('Google Calendar', 'dicalapi-google-calendar-events'),
+        'manage_options',
+        'dicalapi_gcalendar', // Este slug debe coincidir con el utilizado en register_setting
+        'dicalapi_gcalendar_options_page'
     );
 }
 add_action('admin_menu', 'dicalapi_gcalendar_add_admin_menu');
 
-// Registrar configuraciones
-function dicalapi_gcalendar_settings_init() {
-    register_setting('dicalapi_gcalendar', 'dicalapi_gcalendar_options');
+/**
+ * Registrar opciones del plugin
+ */
+function dicalapi_gcalendar_register_settings() {
+    // Registrar el grupo de opciones con el mismo slug que la página
+    register_setting(
+        'dicalapi_gcalendar', // Debe coincidir con el slug de la página
+        'dicalapi_gcalendar_options',
+        array(
+            'sanitize_callback' => 'dicalapi_gcalendar_sanitize_options',
+            'default' => array()
+        )
+    );
 
     // Sección de API
     add_settings_section(
         'dicalapi_gcalendar_api_section',
         __('Configuración de API de Google Calendar', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_api_section_callback',
-        'dicalapi-gcalendar'
+        'dicalapi_gcalendar'
     );
 
     add_settings_field(
         'calendar_id',
         __('ID del Calendario', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_calendar_id_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_api_section'
     );
 
@@ -44,7 +78,7 @@ function dicalapi_gcalendar_settings_init() {
         'api_key',
         __('API Key de Google', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_api_key_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_api_section'
     );
 
@@ -52,7 +86,7 @@ function dicalapi_gcalendar_settings_init() {
         'max_events',
         __('Número máximo de eventos a mostrar', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_max_events_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_api_section'
     );
 
@@ -61,31 +95,24 @@ function dicalapi_gcalendar_settings_init() {
         'dicalapi_gcalendar_styles_section',
         __('Personalización de estilos', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_styles_section_callback',
-        'dicalapi-gcalendar'
+        'dicalapi_gcalendar'
     );
 
-    // Columnas
+    // Agrupamos los colores de fondo de columnas en un solo campo
     add_settings_field(
-        'column1_bg',
-        __('Color de fondo columna de fechas', 'dicalapi-gcalendar'),
-        'dicalapi_gcalendar_column1_bg_render',
-        'dicalapi-gcalendar',
+        'column_bg_colors',
+        __('Colores de fondo de columnas', 'dicalapi-gcalendar'),
+        'dicalapi_gcalendar_column_bg_colors_render',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_styles_section'
     );
 
-    add_settings_field(
-        'column2_bg',
-        __('Color de fondo columna de contenido', 'dicalapi-gcalendar'),
-        'dicalapi_gcalendar_column2_bg_render',
-        'dicalapi-gcalendar',
-        'dicalapi_gcalendar_styles_section'
-    );
-
+    // Sombra de la fila (mantener como está)
     add_settings_field(
         'row_shadow',
         __('Sombra de la fila', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_row_shadow_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_styles_section'
     );
 
@@ -94,7 +121,7 @@ function dicalapi_gcalendar_settings_init() {
         'title_style',
         __('Estilo del título', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_title_style_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_styles_section'
     );
 
@@ -102,7 +129,7 @@ function dicalapi_gcalendar_settings_init() {
         'desc_style',
         __('Estilo de la descripción', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_desc_style_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_styles_section'
     );
 
@@ -110,7 +137,7 @@ function dicalapi_gcalendar_settings_init() {
         'location_style',
         __('Estilo del lugar', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_location_style_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_styles_section'
     );
 
@@ -118,15 +145,7 @@ function dicalapi_gcalendar_settings_init() {
         'date_style',
         __('Estilo de las fechas', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_date_style_render',
-        'dicalapi-gcalendar',
-        'dicalapi_gcalendar_styles_section'
-    );
-
-    add_settings_field(
-        'column3_bg',
-        __('Color de fondo columna de inscripción', 'dicalapi-gcalendar'),
-        'dicalapi_gcalendar_column3_bg_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_styles_section'
     );
 
@@ -135,14 +154,14 @@ function dicalapi_gcalendar_settings_init() {
         'dicalapi_gcalendar_signup_section',
         __('Configuración de inscripción', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_signup_section_callback',
-        'dicalapi-gcalendar'
+        'dicalapi_gcalendar'
     );
 
     add_settings_field(
         'signup_url',
         __('URL de inscripción predeterminada', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_signup_url_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_signup_section'
     );
 
@@ -150,7 +169,7 @@ function dicalapi_gcalendar_settings_init() {
         'signup_button_text',
         __('Texto del botón', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_signup_button_text_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_signup_section'
     );
 
@@ -158,7 +177,7 @@ function dicalapi_gcalendar_settings_init() {
         'button_colors',
         __('Colores del botón', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_button_colors_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_signup_section'
     );
 
@@ -167,14 +186,14 @@ function dicalapi_gcalendar_settings_init() {
         'dicalapi_gcalendar_title_shortcode_section',
         __('Configuración del shortcode de títulos [dicalapi-gcalendar-titulo]', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_title_shortcode_section_callback',
-        'dicalapi-gcalendar'
+        'dicalapi_gcalendar'
     );
 
     add_settings_field(
         'title_text_style',
         __('Estilo del texto del título', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_title_text_style_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_title_shortcode_section'
     );
 
@@ -182,7 +201,7 @@ function dicalapi_gcalendar_settings_init() {
         'title_date_style',
         __('Estilo de las fechas', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_title_date_style_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_title_shortcode_section'
     );
 
@@ -190,7 +209,7 @@ function dicalapi_gcalendar_settings_init() {
         'title_scroll_interval',
         __('Tiempo entre transiciones (segundos)', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_title_scroll_interval_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_title_shortcode_section'
     );
 
@@ -198,7 +217,7 @@ function dicalapi_gcalendar_settings_init() {
         'title_widget_style',
         __('Estilo del widget', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_title_widget_style_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_title_shortcode_section'
     );
 
@@ -206,11 +225,550 @@ function dicalapi_gcalendar_settings_init() {
         'title_indicator_color',
         __('Color de los indicadores', 'dicalapi-gcalendar'),
         'dicalapi_gcalendar_title_indicator_color_render',
-        'dicalapi-gcalendar',
+        'dicalapi_gcalendar',
         'dicalapi_gcalendar_title_shortcode_section'
     );
+
+    // Añadir nueva sección para configuración de vistas previas
+    add_settings_section(
+        'dicalapi_gcalendar_preview_section',
+        __('Configuración de vistas previas (solo panel admin)', 'dicalapi-gcalendar'),
+        'dicalapi_gcalendar_preview_section_callback',
+        'dicalapi_gcalendar'
+    );
+
+    add_settings_field(
+        'preview_bg_color',
+        __('Color de fondo de vistas previas', 'dicalapi-gcalendar'),
+        'dicalapi_gcalendar_preview_bg_color_render',
+        'dicalapi_gcalendar',
+        'dicalapi_gcalendar_preview_section'
+    );
 }
-add_action('admin_init', 'dicalapi_gcalendar_settings_init');
+add_action('admin_init', 'dicalapi_gcalendar_register_settings');
+
+/**
+ * Renderizar la página de opciones
+ */
+function dicalapi_gcalendar_options_page() {
+    ?>
+    <div class="wrap dicalapi-admin-wrap">
+        <h1><?php echo esc_html__('Configuración de Google Calendar', 'dicalapi-google-calendar-events'); ?></h1>
+        
+        <?php 
+        // Determinar la pestaña activa
+        $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'general';
+        ?>
+        
+        <nav class="nav-tab-wrapper">
+            <a href="?page=dicalapi_gcalendar&tab=general" class="nav-tab <?php echo $active_tab == 'general' ? 'nav-tab-active' : ''; ?>">
+                <span class="dashicons dashicons-admin-settings"></span> <?php _e('Configuración General', 'dicalapi-gcalendar'); ?>
+            </a>
+            <a href="?page=dicalapi_gcalendar&tab=styles" class="nav-tab <?php echo $active_tab == 'styles' ? 'nav-tab-active' : ''; ?>">
+                <span class="dashicons dashicons-admin-customizer"></span> <?php _e('Personalización', 'dicalapi-gcalendar'); ?>
+            </a>
+            <a href="?page=dicalapi_gcalendar&tab=preview" class="nav-tab <?php echo $active_tab == 'preview' ? 'nav-tab-active' : ''; ?>">
+                <span class="dashicons dashicons-visibility"></span> <?php _e('Vista Previa', 'dicalapi-gcalendar'); ?>
+            </a>
+            <a href="?page=dicalapi_gcalendar&tab=help" class="nav-tab <?php echo $active_tab == 'help' ? 'nav-tab-active' : ''; ?>">
+                <span class="dashicons dashicons-editor-help"></span> <?php _e('Ayuda', 'dicalapi-gcalendar'); ?>
+            </a>
+        </nav>
+        
+        <div class="tab-content">
+            <form method="post" action="options.php">
+                <?php settings_fields('dicalapi_gcalendar'); ?>
+                
+                <?php if ($active_tab == 'general'): ?>
+                    <div id="tab-general" class="tab-pane active">
+                        <div class="dicalapi-settings-section">
+                            <h2><?php _e('Configuración de API', 'dicalapi-gcalendar'); ?></h2>
+                            <p class="section-description"><?php _e('Conecta tu calendario de Google para mostrar eventos.', 'dicalapi-gcalendar'); ?></p>
+                            <table class="form-table">
+                                <tbody>
+                                    <?php 
+                                    do_settings_fields('dicalapi_gcalendar', 'dicalapi_gcalendar_api_section');
+                                    ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="dicalapi-settings-section">
+                            <h2><?php _e('Configuración de inscripción', 'dicalapi-gcalendar'); ?></h2>
+                            <p class="section-description"><?php _e('Define la URL y texto del botón de inscripción a eventos.', 'dicalapi-gcalendar'); ?></p>
+                            <table class="form-table">
+                                <tbody>
+                                    <?php 
+                                    do_settings_fields('dicalapi_gcalendar', 'dicalapi_gcalendar_signup_section');
+                                    ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                <?php elseif ($active_tab == 'styles'): ?>
+                    <div id="tab-styles" class="tab-pane active">
+                        <div class="dicalapi-settings-columns">
+                            <div class="dicalapi-settings-column">
+                                <div class="dicalapi-settings-section">
+                                    <h2><?php _e('Estilo General', 'dicalapi-gcalendar'); ?></h2>
+                                    <table class="form-table">
+                                        <tbody>
+                                            <?php 
+                                            // Campos de color de columnas y sombra
+                                            dicalapi_gcalendar_column_bg_colors_render();
+                                            dicalapi_gcalendar_row_shadow_render();
+                                            ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="dicalapi-settings-section">
+                                    <h2><?php _e('Textos y Fechas', 'dicalapi-gcalendar'); ?></h2>
+                                    <table class="form-table">
+                                        <tbody>
+                                            <tr>
+                                                <th scope="row"><?php _e('Título', 'dicalapi-gcalendar'); ?></th>
+                                                <td><?php dicalapi_gcalendar_title_style_render(); ?></td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row"><?php _e('Descripción', 'dicalapi-gcalendar'); ?></th>
+                                                <td><?php dicalapi_gcalendar_desc_style_render(); ?></td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row"><?php _e('Ubicación', 'dicalapi-gcalendar'); ?></th>
+                                                <td><?php dicalapi_gcalendar_location_style_render(); ?></td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row"><?php _e('Fechas', 'dicalapi-gcalendar'); ?></th>
+                                                <td><?php dicalapi_gcalendar_date_style_render(); ?></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div class="dicalapi-settings-column">
+                                <div class="dicalapi-settings-section">
+                                    <h2><?php _e('Shortcode de Títulos', 'dicalapi-gcalendar'); ?></h2>
+                                    <table class="form-table">
+                                        <tbody>
+                                            <?php 
+                                            do_settings_fields('dicalapi_gcalendar', 'dicalapi_gcalendar_title_shortcode_section');
+                                            ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div class="dicalapi-settings-section">
+                                    <h2><?php _e('Configuración de Vista Previa', 'dicalapi-gcalendar'); ?></h2>
+                                    <p><?php _e('Este color solo afecta a las vistas previas del panel de administración.', 'dicalapi-gcalendar'); ?></p>
+                                    <table class="form-table">
+                                        <tbody>
+                                            <tr>
+                                                <th scope="row"><?php _e('Color de fondo', 'dicalapi-gcalendar'); ?></th>
+                                                <td><?php dicalapi_gcalendar_preview_bg_color_render(); ?></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                <?php elseif ($active_tab == 'preview'): ?>
+                    <div id="tab-preview" class="tab-pane active">
+                        <div class="dicalapi-settings-section">
+                            <?php
+                            // Mostrar vista previa del shortcode principal 
+                            dicalapi_gcalendar_display_preview();
+                            
+                            // Mostrar vista previa del shortcode de títulos
+                            dicalapi_gcalendar_display_title_shortcode_preview();
+                            ?>
+                        </div>
+                    </div>
+                    
+                <?php elseif ($active_tab == 'help'): ?>
+                    <div id="tab-help" class="tab-pane active">
+                        <div class="dicalapi-settings-section">
+                            <h2><?php _e('Uso de Shortcodes', 'dicalapi-gcalendar'); ?></h2>
+                            
+                            <div class="dicalapi-help-grid">
+                                <div class="dicalapi-help-card">
+                                    <h3><?php _e('Shortcode Principal', 'dicalapi-gcalendar'); ?></h3>
+                                    <div class="shortcode-example">
+                                        <code>[dicalapi_gcalendar]</code>
+                                    </div>
+                                    <p><?php _e('Muestra eventos con toda la información: fechas, título, descripción, ubicación y botón.', 'dicalapi-gcalendar'); ?></p>
+                                    <p><strong><?php _e('Parámetros:', 'dicalapi-gcalendar'); ?></strong></p>
+                                    <ul>
+                                        <li><code>max_events="5"</code> - <?php _e('Número de eventos a mostrar', 'dicalapi-gcalendar'); ?></li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="dicalapi-help-card">
+                                    <h3><?php _e('Shortcode de Títulos', 'dicalapi-gcalendar'); ?></h3>
+                                    <div class="shortcode-example">
+                                        <code>[dicalapi-gcalendar-titulo]</code>
+                                    </div>
+                                    <p><?php _e('Muestra solo títulos y fechas con animación automática vertical.', 'dicalapi-gcalendar'); ?></p>
+                                    <p><strong><?php _e('Parámetros:', 'dicalapi-gcalendar'); ?></strong></p>
+                                    <ul>
+                                        <li><code>max_events="3"</code> - <?php _e('Número de eventos a mostrar', 'dicalapi-gcalendar'); ?></li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <h2><?php _e('URLs personalizadas para eventos', 'dicalapi-gcalendar'); ?></h2>
+                            <p><?php _e('Para definir una URL de inscripción específica para un evento, añade este código en la descripción del evento en Google Calendar:', 'dicalapi-gcalendar'); ?></p>
+                            <div class="shortcode-example large">
+                                <code>[signup_url:https://tuformulario.com/inscripcion]</code>
+                            </div>
+                            
+                            <div class="dicalapi-help-note">
+                                <p><?php _e('Esta URL sobrescribirá la URL predeterminada configurada en este panel solo para ese evento específico.', 'dicalapi-gcalendar'); ?></p>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                
+                <?php if ($active_tab != 'help' && $active_tab != 'preview'): ?>
+                    <?php submit_button(); ?>
+                <?php endif; ?>
+            </form>
+        </div>
+    </div>
+    <?php
+}
+
+/**
+ * Añadir un CSS adicional para mejorar la apariencia del panel de administración
+ */
+function dicalapi_gcalendar_admin_head_css() {
+    ?>
+    <style>
+        /* Estilos generales */
+        .dicalapi-admin-wrap {
+            max-width: 1200px;
+        }
+        
+        .dicalapi-color-picker {
+            max-width: 100px;
+        }
+        
+        /* Tabs de navegación */
+        .dicalapi-admin-wrap .nav-tab {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 0;
+        }
+        
+        .dicalapi-admin-wrap .nav-tab .dashicons {
+            margin-right: 5px;
+        }
+        
+        /* Contenido de tabs */
+        .tab-content {
+            background: #fff;
+            border: 1px solid #ccd0d4;
+            border-top: none;
+            padding: 20px;
+            margin-top: 0;
+        }
+        
+        /* Secciones */
+        .dicalapi-settings-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .dicalapi-settings-section:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .section-description {
+            color: #666;
+            font-style: italic;
+            margin-top: -5px;
+        }
+        
+        /* Layout de columnas */
+        .dicalapi-settings-columns {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -15px;
+        }
+        
+        .dicalapi-settings-column {
+            flex: 1;
+            min-width: 300px;
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
+        
+        /* Control de sombras */
+        .dicalapi-shadow-control {
+            margin-top: 10px;
+        }
+        
+        .dicalapi-shadow-preview {
+            margin-top: 15px;
+        }
+        
+        .dicalapi-shadow-preview #dicalapi-shadow-preview-box {
+            padding: 15px;
+            background: #fff;
+            border-radius: 4px;
+            width: 300px;
+            text-align: center;
+            margin-top: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .dicalapi-shadow-custom {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #f2f2f2;
+        }
+        
+        /* Colores de columnas */
+        .dicalapi-columns-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .dicalapi-column-item {
+            display: flex;
+            align-items: center;
+            background: #f9f9f9;
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #eee;
+        }
+        
+        .dicalapi-column-item label {
+            margin-right: 8px;
+            font-weight: 500;
+        }
+        
+        /* Vistas previas */
+        .dicalapi-preview-section {
+            margin-top: 0;
+            background: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.1);
+        }
+        
+        .dicalapi-preview-background {
+            border: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        
+        /* Sección de ayuda */
+        .dicalapi-help-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .dicalapi-help-card {
+            flex: 1;
+            min-width: 300px;
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            padding: 20px;
+        }
+        
+        .shortcode-example {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            margin: 15px 0;
+            border-left: 4px solid #007cba;
+            font-family: monospace;
+        }
+        
+        .shortcode-example.large {
+            font-size: 16px;
+        }
+        
+        .dicalapi-help-note {
+            background: #f0f6fc;
+            border-left: 4px solid #007cba;
+            padding: 15px;
+            margin: 20px 0;
+            color: #043959;
+        }
+    </style>
+    
+    <script>
+        jQuery(document).ready(function($) {
+            // Inicializar los color pickers
+            $('.dicalapi-color-picker').wpColorPicker();
+            
+            // Manejar la selección de sombra predefinida
+            $('#dicalapi-shadow-preset').on('change', function() {
+                var value = $(this).val();
+                var customBox = $('.dicalapi-shadow-custom');
+                
+                if (value === 'custom') {
+                    customBox.show();
+                } else {
+                    customBox.hide();
+                    
+                    // Actualizar valor y vista previa
+                    $('#dicalapi-shadow-final-value').val(value);
+                    $('#dicalapi-shadow-preview-box').css('box-shadow', value);
+                }
+            });
+            
+            // Actualizar vista previa en tiempo real
+            $('#dicalapi-shadow-custom-input').on('input', function() {
+                var customValue = $(this).val();
+                
+                $('#dicalapi-shadow-final-value').val(customValue);
+                $('#dicalapi-shadow-preview-box').css('box-shadow', customValue);
+            });
+            
+            // Actualizar el color de fondo de las vistas previas en tiempo real
+            $('input[name="dicalapi_gcalendar_options[preview_bg_color]"]').wpColorPicker({
+                change: function(event, ui) {
+                    var color = ui.color.toString();
+                    $('.dicalapi-preview-background').css('background-color', color);
+                }
+            });
+        });
+    </script>
+    <?php
+}
+add_action('admin_head', 'dicalapi_gcalendar_admin_head_css');
+
+/**
+ * Sanitiza todas las opciones del plugin
+ * 
+ * @param array $input Las opciones enviadas por el formulario
+ * @return array Las opciones sanitizadas
+ */
+function dicalapi_gcalendar_sanitize_options($input) {
+    // Si no hay input, devolver un array vacío
+    if (!is_array($input)) {
+        return array();
+    }
+    
+    // IMPORTANTE: Obtener las opciones existentes para no perder datos entre pestañas
+    $existing_options = get_option('dicalapi_gcalendar_options', array());
+    
+    // Fusionar las opciones nuevas con las existentes
+    $input = array_merge($existing_options, $input);
+    
+    $sanitized_input = array();
+    
+    // Sanitizar Calendar ID
+    if (isset($input['calendar_id'])) {
+        $sanitized_input['calendar_id'] = sanitize_text_field($input['calendar_id']);
+    }
+    
+    // Sanitizar API Key
+    if (isset($input['api_key'])) {
+        $sanitized_input['api_key'] = sanitize_text_field($input['api_key']);
+    }
+    
+    // Sanitizar máximo de eventos
+    if (isset($input['max_events'])) {
+        $sanitized_input['max_events'] = absint($input['max_events']);
+    }
+    
+    // Sanitizar colores (utilizando sanitize_hex_color)
+    $color_fields = array(
+        'column1_bg', 'column2_bg', 'column3_bg',
+        'title_color', 'desc_color', 'location_color', 'date_color',
+        'button_bg_color', 'button_text_color', 'button_hover_bg_color',
+        'title_text_color', 'title_date_color', 'preview_bg_color'
+    );
+    
+    foreach ($color_fields as $field) {
+        if (isset($input[$field])) {
+            $sanitized_input[$field] = sanitize_hex_color($input[$field]);
+        } elseif (isset($existing_options[$field])) {
+            // Conservar el valor existente si no se proporcionó uno nuevo
+            $sanitized_input[$field] = $existing_options[$field];
+        }
+    }
+    
+    // Sanitizar tamaños de texto (con unidades CSS)
+    $size_fields = array(
+        'title_size', 'desc_size', 'location_size', 'date_size',
+        'button_text_size', 'title_text_size', 'title_date_size'
+    );
+    
+    foreach ($size_fields as $field) {
+        if (isset($input[$field])) {
+            // Permitir solo valores numéricos seguidos de px, em, rem, etc.
+            if (preg_match('/^(\d*\.?\d+)(px|em|rem|%|pt)?$/', $input[$field])) {
+                $sanitized_input[$field] = $input[$field];
+            } else {
+                // Valor por defecto si no es válido
+                $sanitized_input[$field] = '16px';
+            }
+        } elseif (isset($existing_options[$field])) {
+            // Conservar el valor existente si no se proporcionó uno nuevo
+            $sanitized_input[$field] = $existing_options[$field];
+        }
+    }
+    
+    // Sanitizar row shadow
+    if (isset($input['row_shadow'])) {
+        $sanitized_input['row_shadow'] = sanitize_text_field($input['row_shadow']);
+    } elseif (isset($existing_options['row_shadow'])) {
+        $sanitized_input['row_shadow'] = $existing_options['row_shadow'];
+    }
+    
+    // Sanitizar URL de inscripción
+    if (isset($input['signup_url'])) {
+        $sanitized_input['signup_url'] = esc_url_raw($input['signup_url']);
+    } elseif (isset($existing_options['signup_url'])) {
+        $sanitized_input['signup_url'] = $existing_options['signup_url'];
+    }
+    
+    // Sanitizar texto del botón
+    if (isset($input['signup_button_text'])) {
+        $sanitized_input['signup_button_text'] = sanitize_text_field($input['signup_button_text']);
+    } elseif (isset($existing_options['signup_button_text'])) {
+        $sanitized_input['signup_button_text'] = $existing_options['signup_button_text'];
+    }
+    
+    // Sanitizar intervalo de rotación
+    if (isset($input['title_scroll_interval'])) {
+        $sanitized_input['title_scroll_interval'] = absint($input['title_scroll_interval']);
+        // Asegurar que el valor esté entre 2 y 30 segundos
+        if ($sanitized_input['title_scroll_interval'] < 2) {
+            $sanitized_input['title_scroll_interval'] = 2;
+        }
+        if ($sanitized_input['title_scroll_interval'] > 30) {
+            $sanitized_input['title_scroll_interval'] = 30;
+        }
+    } elseif (isset($existing_options['title_scroll_interval'])) {
+        $sanitized_input['title_scroll_interval'] = $existing_options['title_scroll_interval'];
+    }
+    
+    // Asegurar que todos los demás valores se conserven
+    foreach ($existing_options as $key => $value) {
+        if (!isset($sanitized_input[$key])) {
+            $sanitized_input[$key] = $value;
+        }
+    }
+    
+    return $sanitized_input;
+}
 
 // Callbacks de secciones
 function dicalapi_gcalendar_api_section_callback() {
@@ -228,6 +786,10 @@ function dicalapi_gcalendar_signup_section_callback() {
 
 function dicalapi_gcalendar_title_shortcode_section_callback() {
     echo '<p>' . __('Configura el aspecto y comportamiento del shortcode para mostrar títulos de eventos con scroll automático.', 'dicalapi-gcalendar') . '</p>';
+}
+
+function dicalapi_gcalendar_preview_section_callback() {
+    echo '<p>' . __('Configura el aspecto de las vistas previas solo en el panel de administración. Estos ajustes no afectan el frontend.', 'dicalapi-gcalendar') . '</p>';
 }
 
 // Callbacks de campos
@@ -254,17 +816,25 @@ function dicalapi_gcalendar_max_events_render() {
     <?php
 }
 
-function dicalapi_gcalendar_column1_bg_render() {
+function dicalapi_gcalendar_column_bg_colors_render() {
     $options = get_option('dicalapi_gcalendar_options');
     ?>
-    <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[column1_bg]' value='<?php echo esc_attr($options['column1_bg'] ?? '#f8f9fa'); ?>'>
-    <?php
-}
-
-function dicalapi_gcalendar_column2_bg_render() {
-    $options = get_option('dicalapi_gcalendar_options');
-    ?>
-    <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[column2_bg]' value='<?php echo esc_attr($options['column2_bg'] ?? '#ffffff'); ?>'>
+    <div class="dicalapi-columns-grid">
+        <div class="dicalapi-column-item">
+            <label><?php _e('Columna fechas:', 'dicalapi-gcalendar'); ?></label>
+            <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[column1_bg]' value='<?php echo esc_attr($options['column1_bg'] ?? '#f8f9fa'); ?>'>
+        </div>
+        
+        <div class="dicalapi-column-item">
+            <label><?php _e('Columna contenido:', 'dicalapi-gcalendar'); ?></label>
+            <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[column2_bg]' value='<?php echo esc_attr($options['column2_bg'] ?? '#ffffff'); ?>'>
+        </div>
+        
+        <div class="dicalapi-column-item">
+            <label><?php _e('Columna inscripción:', 'dicalapi-gcalendar'); ?></label>
+            <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[column3_bg]' value='<?php echo esc_attr($options['column3_bg'] ?? '#f0f0f0'); ?>'>
+        </div>
+    </div>
     <?php
 }
 
@@ -367,13 +937,6 @@ function dicalapi_gcalendar_date_style_render() {
     <?php
 }
 
-function dicalapi_gcalendar_column3_bg_render() {
-    $options = get_option('dicalapi_gcalendar_options');
-    ?>
-    <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[column3_bg]' value='<?php echo esc_attr($options['column3_bg'] ?? '#f0f0f0'); ?>'>
-    <?php
-}
-
 function dicalapi_gcalendar_signup_url_render() {
     $options = get_option('dicalapi_gcalendar_options');
     ?>
@@ -447,43 +1010,167 @@ function dicalapi_gcalendar_title_indicator_color_render() {
     echo '<input type="hidden" name="dicalapi_gcalendar_options[title_indicator_color]" value="#007bff">';
 }
 
+function dicalapi_gcalendar_preview_bg_color_render() {
+    $options = get_option('dicalapi_gcalendar_options');
+    $preview_bg_color = isset($options['preview_bg_color']) ? $options['preview_bg_color'] : '#ffffff';
+    ?>
+    <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[preview_bg_color]' value='<?php echo esc_attr($preview_bg_color); ?>'>
+    <p class="description"><?php _e('Este color solo afecta a las vistas previas en esta página de administración. Te ayuda a visualizar cómo se verán los shortcodes en el fondo de tu sitio web.', 'dicalapi-gcalendar'); ?></p>
+    <?php
+}
+
 // Agregar un ejemplo visual de cómo se verán los eventos
 function dicalapi_gcalendar_display_preview() {
     $options = get_option('dicalapi_gcalendar_options');
-    $css = dicalapi_gcalendar_generate_dynamic_css($options);
+    $preview_bg_color = isset($options['preview_bg_color']) ? $options['preview_bg_color'] : '#ffffff';
+    
+    // Obtener los valores de configuración con valores por defecto
+    $column1_bg = isset($options['column1_bg']) ? $options['column1_bg'] : '#f8f9fa';
+    $column2_bg = isset($options['column2_bg']) ? $options['column2_bg'] : '#ffffff';
+    $column3_bg = isset($options['column3_bg']) ? $options['column3_bg'] : '#f0f0f0';
+    
+    $title_color = isset($options['title_color']) ? $options['title_color'] : '#333333';
+    $title_size = isset($options['title_size']) ? $options['title_size'] : '18px';
+    
+    $desc_color = isset($options['desc_color']) ? $options['desc_color'] : '#666666';
+    $desc_size = isset($options['desc_size']) ? $options['desc_size'] : '14px';
+    
+    $location_color = isset($options['location_color']) ? $options['location_color'] : '#888888';
+    $location_size = isset($options['location_size']) ? $options['location_size'] : '14px';
+    
+    $date_color = isset($options['date_color']) ? $options['date_color'] : '#007bff';
+    $date_size = isset($options['date_size']) ? $options['date_size'] : '16px';
+    
+    $button_bg_color = isset($options['button_bg_color']) ? $options['button_bg_color'] : '#007bff';
+    $button_hover_bg_color = isset($options['button_hover_bg_color']) ? $options['button_hover_bg_color'] : '#0056b3';
+    $button_text_color = isset($options['button_text_color']) ? $options['button_text_color'] : '#ffffff';
+    $button_text_size = isset($options['button_text_size']) ? $options['button_text_size'] : '14px';
+    
+    $row_shadow = isset($options['row_shadow']) ? $options['row_shadow'] : '0px 2px 5px rgba(0,0,0,0.1)';
     
     echo '<div class="dicalapi-preview-section">';
     echo '<h2>' . __('Vista previa', 'dicalapi-gcalendar') . '</h2>';
     echo '<p>' . __('Así es como se verán tus eventos con la configuración actual:', 'dicalapi-gcalendar') . '</p>';
     
-    echo '<style>' . $css . '</style>';
+    // Contenedor con color de fondo configurable
+    echo '<div class="dicalapi-preview-background" style="background-color:' . esc_attr($preview_bg_color) . '; padding: 20px; border-radius: 4px;">';
     
-    echo '<div class="dicalapi-gcalendar-container">';
+    echo '<div class="dicalapi-gcalendar-container" id="dicalapi-preview-container">';
     echo '<div class="dicalapi-gcalendar-event-wrapper">';
-    echo '<div class="dicalapi-gcalendar-event" id="dicalapi-preview-event">';
     
-    // Columna de fechas
-    echo '<div class="dicalapi-gcalendar-date-column">';
-    echo '<div class="dicalapi-gcalendar-day">15</div>';
-    echo '<div class="dicalapi-gcalendar-month">Oct</div>';
+    // Aplicar la sombra configurada directamente al elemento del evento
+    echo '<div class="dicalapi-gcalendar-event" id="dicalapi-preview-event" style="display: flex; border-radius: 4px; overflow: hidden; margin-bottom: 15px; box-shadow: ' . esc_attr($row_shadow) . ';">';
+    
+    // Columna de fechas con estilo en línea
+    echo '<div class="dicalapi-gcalendar-date-column" style="background-color: ' . esc_attr($column1_bg) . '; padding: 15px; text-align: center; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 80px;">';
+    echo '<div class="dicalapi-gcalendar-day" style="font-size: ' . esc_attr($date_size) . '; color: ' . esc_attr($date_color) . '; font-weight: bold;">15</div>';
+    echo '<div class="dicalapi-gcalendar-month" style="font-size: calc(' . esc_attr($date_size) . ' * 0.8); color: ' . esc_attr($date_color) . ';">Oct</div>';
     echo '</div>';
     
-    // Columna de contenido
-    echo '<div class="dicalapi-gcalendar-content-column">';
-    echo '<h3 class="dicalapi-gcalendar-title">Evento de ejemplo</h3>';
-    echo '<div class="dicalapi-gcalendar-description">Esta es una descripción de ejemplo para mostrar cómo se verán tus eventos.</div>';
-    echo '<div class="dicalapi-gcalendar-location"><span class="dashicons dashicons-location"></span> Lugar de ejemplo</div>';
+    // Columna de contenido con estilo en línea
+    echo '<div class="dicalapi-gcalendar-content-column" style="background-color: ' . esc_attr($column2_bg) . '; padding: 15px; flex-grow: 1;">';
+    echo '<h3 class="dicalapi-gcalendar-title" style="color: ' . esc_attr($title_color) . '; font-size: ' . esc_attr($title_size) . '; margin-top: 0; margin-bottom: 10px;">Evento de ejemplo</h3>';
+    echo '<div class="dicalapi-gcalendar-description" style="color: ' . esc_attr($desc_color) . '; font-size: ' . esc_attr($desc_size) . '; margin-bottom: 10px;">Esta es una descripción de ejemplo para mostrar cómo se verán tus eventos.</div>';
+    echo '<div class="dicalapi-gcalendar-location" style="color: ' . esc_attr($location_color) . '; font-size: ' . esc_attr($location_size) . ';"><span class="dashicons dashicons-location" style="vertical-align: text-bottom;"></span> Lugar de ejemplo</div>';
     echo '</div>';
     
-    // Columna de inscripción
-    echo '<div class="dicalapi-gcalendar-signup-column">';
+    // Columna de inscripción con estilo en línea
+    echo '<div class="dicalapi-gcalendar-signup-column" style="background-color: ' . esc_attr($column3_bg) . '; padding: 15px; display: flex; align-items: center; justify-content: center; width: 120px;">';
     $button_text = !empty($options['signup_button_text']) ? $options['signup_button_text'] : __('Inscribirse', 'dicalapi-gcalendar');
-    echo '<a href="#" class="dicalapi-gcalendar-signup-button">' . esc_html($button_text) . '</a>';
+    echo '<a href="#" class="dicalapi-gcalendar-signup-button" style="display: inline-block; background-color: ' . esc_attr($button_bg_color) . '; color: ' . esc_attr($button_text_color) . '; text-decoration: none; padding: 8px 15px; border-radius: 4px; text-align: center; font-size: ' . esc_attr($button_text_size) . '; transition: background-color 0.3s;" data-hover-color="' . esc_attr($button_hover_bg_color) . '">' . esc_html($button_text) . '</a>';
     echo '</div>';
     
     echo '</div>'; // Fin evento
     echo '</div>'; // Fin wrapper
     echo '</div>'; // Fin contenedor
+    
+    echo '</div>'; // Fin del contenedor con fondo personalizado
+    
+    // Agregar script para simular el efecto hover del botón
+    echo '<script>
+        jQuery(document).ready(function($) {
+            // Efecto hover del botón
+            $(".dicalapi-gcalendar-signup-button").hover(
+                function() {
+                    var hoverColor = $(this).data("hover-color");
+                    $(this).css("background-color", hoverColor);
+                },
+                function() {
+                    $(this).css("background-color", "' . esc_js($button_bg_color) . '");
+                }
+            );
+            
+            // Actualizar la vista previa en tiempo real cuando cambien los colores
+            $("input.dicalapi-color-picker").wpColorPicker({
+                change: function(event, ui) {
+                    updatePreview();
+                }
+            });
+            
+            // Actualizar la vista previa cuando cambien otros campos de entrada
+            $("input[name^=\'dicalapi_gcalendar_options\']").on("input change", function() {
+                updatePreview();
+            });
+            
+            // Función para actualizar la vista previa
+            function updatePreview() {
+                var column1_bg = $("input[name=\'dicalapi_gcalendar_options[column1_bg]\']").val() || "#f8f9fa";
+                var column2_bg = $("input[name=\'dicalapi_gcalendar_options[column2_bg]\']").val() || "#ffffff";
+                var column3_bg = $("input[name=\'dicalapi_gcalendar_options[column3_bg]\']").val() || "#f0f0f0";
+                
+                var title_color = $("input[name=\'dicalapi_gcalendar_options[title_color]\']").val() || "#333333";
+                var title_size = $("input[name=\'dicalapi_gcalendar_options[title_size]\']").val() || "18px";
+                
+                var desc_color = $("input[name=\'dicalapi_gcalendar_options[desc_color]\']").val() || "#666666";
+                var desc_size = $("input[name=\'dicalapi_gcalendar_options[desc_size]\']").val() || "14px";
+                
+                var location_color = $("input[name=\'dicalapi_gcalendar_options[location_color]\']").val() || "#888888";
+                var location_size = $("input[name=\'dicalapi_gcalendar_options[location_size]\']").val() || "14px";
+                
+                var date_color = $("input[name=\'dicalapi_gcalendar_options[date_color]\']").val() || "#007bff";
+                var date_size = $("input[name=\'dicalapi_gcalendar_options[date_size]\']").val() || "16px";
+                
+                var button_bg = $("input[name=\'dicalapi_gcalendar_options[button_bg_color]\']").val() || "#007bff";
+                var button_hover_bg = $("input[name=\'dicalapi_gcalendar_options[button_hover_bg_color]\']").val() || "#0056b3";
+                var button_text_color = $("input[name=\'dicalapi_gcalendar_options[button_text_color]\']").val() || "#ffffff";
+                var button_text_size = $("input[name=\'dicalapi_gcalendar_options[button_text_size]\']").val() || "14px";
+                
+                var shadow = $("#dicalapi-shadow-final-value").val() || "0px 2px 5px rgba(0,0,0,0.1)";
+                
+                // Actualizar los elementos en la vista previa
+                $(".dicalapi-gcalendar-date-column").css("background-color", column1_bg);
+                $(".dicalapi-gcalendar-content-column").css("background-color", column2_bg);
+                $(".dicalapi-gcalendar-signup-column").css("background-color", column3_bg);
+                
+                $(".dicalapi-gcalendar-title").css({
+                    "color": title_color,
+                    "font-size": title_size
+                });
+                
+                $(".dicalapi-gcalendar-description").css({
+                    "color": desc_color,
+                    "font-size": desc_size
+                });
+                
+                $(".dicalapi-gcalendar-location").css({
+                    "color": location_color,
+                    "font-size": location_size
+                });
+                
+                $(".dicalapi-gcalendar-day, .dicalapi-gcalendar-month").css("color", date_color);
+                $(".dicalapi-gcalendar-day").css("font-size", date_size);
+                $(".dicalapi-gcalendar-month").css("font-size", "calc(" + date_size + " * 0.8)");
+                
+                $(".dicalapi-gcalendar-signup-button").css({
+                    "background-color": button_bg,
+                    "color": button_text_color,
+                    "font-size": button_text_size
+                }).data("hover-color", button_hover_bg);
+                
+                $("#dicalapi-preview-event").css("box-shadow", shadow);
+            }
+        });
+    </script>';
     
     echo '</div>'; // Fin sección preview
 }
@@ -493,14 +1180,14 @@ function dicalapi_gcalendar_display_title_shortcode_preview() {
     $options = get_option('dicalapi_gcalendar_options');
     $scroll_interval = isset($options['title_scroll_interval']) ? intval($options['title_scroll_interval']) : 5;
     $scroll_interval_ms = $scroll_interval * 1000;
-    
-    $css = dicalapi_gcalendar_generate_title_css($options);
+    $preview_bg_color = isset($options['preview_bg_color']) ? $options['preview_bg_color'] : '#ffffff';
     
     echo '<div class="dicalapi-preview-section">';
     echo '<h2>' . __('Vista previa del shortcode de títulos', 'dicalapi-gcalendar') . '</h2>';
     echo '<p>' . __('Así es como se verá el shortcode [dicalapi-gcalendar-titulo] con la configuración actual:', 'dicalapi-gcalendar') . '</p>';
     
-    echo '<style>' . $css . '</style>';
+    // Contenedor con color de fondo configurable
+    echo '<div class="dicalapi-preview-background" style="background-color:' . esc_attr($preview_bg_color) . '; padding: 20px; border-radius: 4px;">';
     
     echo '<div class="dicalapi-gcalendar-ticker-container" id="dicalapi-admin-preview-ticker" style="border: 1px solid #ddd; padding: 10px; border-radius: 5px;">';
     
@@ -525,137 +1212,9 @@ function dicalapi_gcalendar_display_title_shortcode_preview() {
     echo '</ul>';
     echo '</div>'; // Fin viewport
     echo '</div>'; // Fin wrapper
-    echo '</div>'; // Fin contenedor
+    echo '</div>'; // Fin contenedor ticker
     
-    // Script para la vista previa con funcionalidad mejorada
-    echo '<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Inicio del código para la vista previa
-        (function() {
-            const container = document.getElementById("dicalapi-admin-preview-ticker");
-            if (!container) return;
-            
-            const wrapper = container.querySelector(".dicalapi-gcalendar-ticker-wrapper");
-            if (!wrapper) return;
-            
-            const items = container.querySelectorAll(".dicalapi-gcalendar-ticker-item");
-            if (items.length <= 1) return;
-            
-            const interval = parseInt(wrapper.getAttribute("data-interval")) || 5000;
-            const viewport = container.querySelector(".dicalapi-gcalendar-ticker-viewport");
-            
-            // Asegurarse de que la altura del viewport sea correcta
-            const itemHeight = items[0].offsetHeight;
-            viewport.style.height = itemHeight + "px";
-            
-            // Variables de control
-            let currentIndex = 0;
-            let isAnimating = false;
-            let previewInterval;
-            
-            function animatePreview() {
-                if (isAnimating) return;
-                isAnimating = true;
-                
-                // Get current and next items
-                const currentItem = items[currentIndex];
-                const nextIndex = (currentIndex + 1) % items.length;
-                const nextItem = items[nextIndex];
-                
-                // Prepare next item
-                nextItem.style.transform = "translateY(100%)";
-                nextItem.style.visibility = "visible";
-                nextItem.style.opacity = "0";
-                
-                // Animate
-                requestAnimationFrame(function() {
-                    // Fade out current item while moving up
-                    currentItem.style.transition = "transform 0.7s ease, opacity 0.7s ease";
-                    currentItem.style.transform = "translateY(-100%)";
-                    currentItem.style.opacity = "0";
-                    
-                    // Fade in next item while moving up
-                    nextItem.style.transition = "transform 0.7s ease, opacity 0.7s ease";
-                    nextItem.style.transform = "translateY(0)";
-                    nextItem.style.opacity = "1";
-                    
-                    // Wait for animation to complete
-                    setTimeout(function() {
-                        // Reset position of current item
-                        currentItem.style.transition = "none";
-                        currentItem.style.transform = "translateY(100%)";
-                        currentItem.style.visibility = "hidden";
-                        
-                        // Update index
-                        currentIndex = nextIndex;
-                        isAnimating = false;
-                    }, 700);
-                });
-            }
-            
-            // Start preview animation
-            previewInterval = setInterval(animatePreview, interval);
-            
-            // Actualizar estilos cuando cambian los inputs
-            function updatePreviewStyles() {
-                const titleColor = document.querySelector("input[name=\'dicalapi_gcalendar_options[title_text_color]\']").value || "#333333";
-                const titleSize = document.querySelector("input[name=\'dicalapi_gcalendar_options[title_text_size]\']").value || "18px";
-                const dateColor = document.querySelector("input[name=\'dicalapi_gcalendar_options[title_date_color]\']").value || "#007bff";
-                const dateSize = document.querySelector("input[name=\'dicalapi_gcalendar_options[title_date_size]\']").value || "16px";
-                
-                // Update all title texts
-                const titleElements = container.querySelectorAll(".dicalapi-gcalendar-title-text");
-                titleElements.forEach(function(el) {
-                    el.style.color = titleColor;
-                    el.style.fontSize = titleSize;
-                });
-                
-                // Update all date texts
-                const dateElements = container.querySelectorAll(".dicalapi-gcalendar-title-dates");
-                dateElements.forEach(function(el) {
-                    el.style.color = dateColor;
-                    el.style.fontSize = dateSize;
-                });
-            }
-            
-            // Monitor changes to color and text inputs
-            const colorInputs = document.querySelectorAll("input[name^=\'dicalapi_gcalendar_options[title_\']");
-            colorInputs.forEach(function(input) {
-                input.addEventListener("input", updatePreviewStyles);
-                input.addEventListener("change", updatePreviewStyles);
-            });
-            
-            // Special handling for WP color pickers
-            jQuery(function($) {
-                $(".wp-color-picker").wpColorPicker({
-                    change: function(event, ui) {
-                        setTimeout(updatePreviewStyles, 50);
-                    }
-                });
-            });
-            
-            // Monitor changes to interval
-            const intervalInput = document.querySelector("input[name=\'dicalapi_gcalendar_options[title_scroll_interval]\']");
-            if (intervalInput) {
-                intervalInput.addEventListener("change", function() {
-                    const newInterval = parseInt(this.value) * 1000;
-                    clearInterval(previewInterval);
-                    previewInterval = setInterval(animatePreview, newInterval);
-                });
-            }
-            
-            // Clean up on page visibility change
-            document.addEventListener("visibilitychange", function() {
-                if (document.hidden) {
-                    clearInterval(previewInterval);
-                } else {
-                    clearInterval(previewInterval);
-                    previewInterval = setInterval(animatePreview, interval);
-                }
-            });
-        })();
-    });
-    </script>';
+    echo '</div>'; // Fin del contenedor con fondo personalizado
     
     echo '</div>'; // Fin sección preview
 }
@@ -668,7 +1227,7 @@ function dicalapi_gcalendar_settings_page() {
         <form action='options.php' method='post'>
             <?php
             settings_fields('dicalapi_gcalendar');
-            do_settings_sections('dicalapi-gcalendar');
+            do_settings_sections('dicalapi_gcalendar');
             submit_button();
             ?>
         </form>
@@ -705,4 +1264,34 @@ function dicalapi_gcalendar_settings_page() {
         </div>
     </div>
     <?php
+}
+
+/**
+ * Genera CSS dinámico para la vista previa basado en las opciones
+ */
+function dicalapi_gcalendar_generate_admin_preview_css($options) {
+    // Generar CSS dinámico
+    $css = '';
+    $css .= '.dicalapi-gcalendar-container { font-family: Arial, sans-serif; }';
+    $css .= '.dicalapi-gcalendar-date-column { background-color: ' . esc_attr($options['column1_bg'] ?? '#f8f9fa') . '; }';
+    $css .= '.dicalapi-gcalendar-content-column { background-color: ' . esc_attr($options['column2_bg'] ?? '#ffffff') . '; }';
+    $css .= '.dicalapi-gcalendar-signup-column { background-color: ' . esc_attr($options['column3_bg'] ?? '#f0f0f0') . '; }';
+    $css .= '.dicalapi-gcalendar-title { color: ' . esc_attr($options['title_color'] ?? '#333333') . '; font-size: ' . esc_attr($options['title_size'] ?? '18px') . '; }';
+    $css .= '.dicalapi-gcalendar-description { color: ' . esc_attr($options['desc_color'] ?? '#666666') . '; font-size: ' . esc_attr($options['desc_size'] ?? '14px') . '; }';
+    $css .= '.dicalapi-gcalendar-location { color: ' . esc_attr($options['location_color'] ?? '#888888') . '; font-size: ' . esc_attr($options['location_size'] ?? '14px') . '; }';
+    $css .= '.dicalapi-gcalendar-signup-button { background-color: ' . esc_attr($options['button_bg_color'] ?? '#007bff') . '; color: ' . esc_attr($options['button_text_color'] ?? '#ffffff') . '; font-size: ' . esc_attr($options['button_text_size'] ?? '14px') . '; }';
+    $css .= '.dicalapi-gcalendar-signup-button:hover { background-color: ' . esc_attr($options['button_hover_bg_color'] ?? '#0056b3') . '; }';
+    return $css;
+}
+
+/**
+ * Genera CSS dinámico para el shortcode de títulos en la vista previa
+ */
+function dicalapi_gcalendar_generate_admin_title_css($options) {
+    // Generar CSS dinámico
+    $css = '';
+    $css .= '.dicalapi-gcalendar-ticker-container { font-family: Arial, sans-serif; }';
+    $css .= '.dicalapi-gcalendar-title-text { color: ' . esc_attr($options['title_text_color'] ?? '#333333') . '; font-size: ' . esc_attr($options['title_text_size'] ?? '18px') . '; }';
+    $css .= '.dicalapi-gcalendar-title-dates { color: ' . esc_attr($options['title_date_color'] ?? '#007bff') . '; font-size: ' . esc_attr($options['title_date_size'] ?? '16px') . '; }';
+    return $css;
 }
