@@ -135,3 +135,260 @@ input[type="text"].regular-text {
     margin-bottom: 5px;
     font-weight: 500;
 }
+
+/* Estilos para los controles de personalización de texto */
+.dicalapi-style-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 5px;
+    border: 1px solid #e1e5e9;
+}
+
+.dicalapi-style-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.dicalapi-style-row label {
+    min-width: 80px;
+    font-weight: 500;
+    color: #23282d;
+}
+
+/* Selectores de fuente */
+.dicalapi-font-select {
+    min-width: 150px;
+    max-width: 200px;
+}
+
+/* Inputs de tamaño */
+.dicalapi-size-input {
+    width: 80px !important;
+    max-width: 80px;
+}
+
+/* Opciones de estilo de texto (negrita, cursiva, subrayado) */
+.dicalapi-text-style-options {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.dicalapi-text-style-options input[type="checkbox"] {
+    display: none;
+}
+
+.dicalapi-text-style-options label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+    color: #666;
+    min-width: auto;
+}
+
+.dicalapi-text-style-options label:hover {
+    background: #f0f0f0;
+    border-color: #007cba;
+}
+
+.dicalapi-text-style-options input[type="checkbox"]:checked + label {
+    background: #007cba;
+    color: #fff;
+    border-color: #005a87;
+}
+
+/* Opciones de alineación de texto */
+.dicalapi-text-align-options {
+    display: flex;
+    gap: 2px;
+    align-items: center;
+}
+
+.dicalapi-text-align-options input[type="radio"] {
+    display: none;
+}
+
+.dicalapi-text-align-options label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #fff;
+    color: #666;
+    min-width: auto;
+}
+
+.dicalapi-text-align-options label:hover {
+    background: #f0f0f0;
+    border-color: #007cba;
+}
+
+.dicalapi-text-align-options input[type="radio"]:checked + label {
+    background: #007cba;
+    color: #fff;
+    border-color: #005a87;
+}
+
+/* Elementos de vista previa */
+.dicalapi-style-preview {
+    margin-top: 15px;
+    padding: 15px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.dicalapi-preview-title,
+.dicalapi-preview-description,
+.dicalapi-preview-location {
+    margin: 0;
+    padding: 8px;
+    font-size: 16px;
+    line-height: 1.4;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.dicalapi-preview-location .dashicons {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+/* Vista previa de fechas con estructura especial */
+.dicalapi-style-preview.date-preview {
+    text-align: center;
+}
+
+.dicalapi-preview-date {
+    display: inline-block;
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f8f9fa;
+    min-width: 80px;
+}
+
+.dicalapi-preview-day,
+.dicalapi-preview-month {
+    display: block;
+    margin: 0;
+    padding: 2px 0;
+    line-height: 1.2;
+    transition: all 0.3s ease;
+}
+
+.dicalapi-preview-day {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.dicalapi-preview-month {
+    font-size: 14px;
+    margin-bottom: 0;
+}
+
+/* Opciones específicas para fechas */
+.dicalapi-date-options {
+    background: #f9f9f9;
+    border: 1px solid #e1e5e9;
+    border-radius: 5px;
+    padding: 15px;
+}
+
+.dicalapi-date-options h4 {
+    margin: 0 0 15px 0;
+    padding: 0;
+    color: #23282d;
+    font-size: 14px;
+    font-weight: 600;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+}
+
+/* Grids de columnas mejorado */
+.dicalapi-columns-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    align-items: flex-start;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    border: 1px solid #e1e5e9;
+}
+
+.dicalapi-column-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    min-width: 150px;
+}
+
+.dicalapi-column-item label {
+    font-weight: 500;
+    color: #23282d;
+    margin: 0 0 5px 0;
+    font-size: 13px;
+}
+
+/* Mejoras para campos de color */
+.dicalapi-color-picker {
+    max-width: 100px !important;
+    margin: 0 !important;
+}
+
+/* Espaciado mejorado para campos del formulario */
+.form-table th {
+    width: 200px;
+    padding: 15px 10px 15px 0;
+    vertical-align: top;
+}
+
+.form-table td {
+    padding: 10px 10px 15px 0;
+    vertical-align: top;
+}
+
+/* Responsividad para controles */
+@media (max-width: 767px) {
+    .dicalapi-style-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .dicalapi-style-row label {
+        min-width: auto;
+        margin-bottom: 5px;
+    }
+    
+    .dicalapi-columns-grid {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .dicalapi-column-item {
+        min-width: auto;
+        width: 100%;
+    }
+}

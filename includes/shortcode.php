@@ -39,8 +39,7 @@ function dicalapi_gcalendar_shortcode($atts) {
     if (empty($events_data['events'])) {
         return '<div class="dicalapi-gcalendar-no-events">' . __('No hay eventos próximos.', 'dicalapi-gcalendar') . '</div>';
     }
-    
-    // Obtener opciones para estilos
+      // Obtener opciones para estilos
     $options = get_option('dicalapi_gcalendar_options');
     
     // Generar CSS dinámico
@@ -55,12 +54,51 @@ function dicalapi_gcalendar_shortcode($atts) {
     $column2_bg = esc_attr($options['column2_bg'] ?? '#ffffff');
     $column3_bg = esc_attr($options['column3_bg'] ?? '#f0f0f0');
     $row_shadow = esc_attr($options['row_shadow'] ?? '0px 2px 5px rgba(0,0,0,0.1)');
+    
+    // Estilos para título
     $title_color = esc_attr($options['title_color'] ?? '#333333');
     $title_size = esc_attr($options['title_size'] ?? '18px');
+    $title_font = !empty($options['title_font']) ? "font-family: '" . esc_attr($options['title_font']) . "';" : '';
+    $title_bold = !empty($options['title_bold']) ? 'font-weight: bold;' : '';
+    $title_italic = !empty($options['title_italic']) ? 'font-style: italic;' : '';
+    $title_underline = !empty($options['title_underline']) ? 'text-decoration: underline;' : '';
+    $title_align = !empty($options['title_align']) ? 'text-align: ' . esc_attr($options['title_align']) . ';' : 'text-align: center;';
+    
+    // Estilos para descripción
     $desc_color = esc_attr($options['desc_color'] ?? '#666666');
     $desc_size = esc_attr($options['desc_size'] ?? '14px');
+    $desc_font = !empty($options['desc_font']) ? "font-family: '" . esc_attr($options['desc_font']) . "';" : '';
+    $desc_bold = !empty($options['desc_bold']) ? 'font-weight: bold;' : '';
+    $desc_italic = !empty($options['desc_italic']) ? 'font-style: italic;' : '';
+    $desc_underline = !empty($options['desc_underline']) ? 'text-decoration: underline;' : '';
+    $desc_align = !empty($options['desc_align']) ? 'text-align: ' . esc_attr($options['desc_align']) . ';' : 'text-align: center;';
+    
+    // Estilos para ubicación
     $location_color = esc_attr($options['location_color'] ?? '#888888');
     $location_size = esc_attr($options['location_size'] ?? '14px');
+    $location_font = !empty($options['location_font']) ? "font-family: '" . esc_attr($options['location_font']) . "';" : '';
+    $location_bold = !empty($options['location_bold']) ? 'font-weight: bold;' : '';
+    $location_italic = !empty($options['location_italic']) ? 'font-style: italic;' : '';
+    $location_underline = !empty($options['location_underline']) ? 'text-decoration: underline;' : '';
+    $location_align = !empty($options['location_align']) ? 'text-align: ' . esc_attr($options['location_align']) . ';' : 'text-align: center;';
+    
+    // Estilos para día
+    $day_color = esc_attr($options['day_color'] ?? $options['date_color'] ?? '#007bff');
+    $day_size = esc_attr($options['day_size'] ?? $options['date_size'] ?? '18px');
+    $day_font = !empty($options['day_font']) ? "font-family: '" . esc_attr($options['day_font']) . "';" : '';
+    $day_bold = !empty($options['day_bold']) ? 'font-weight: bold;' : '';
+    $day_italic = !empty($options['day_italic']) ? 'font-style: italic;' : '';
+    $day_underline = !empty($options['day_underline']) ? 'text-decoration: underline;' : '';
+    
+    // Estilos para mes
+    $month_color = esc_attr($options['month_color'] ?? $options['date_color'] ?? '#007bff');
+    $month_size = esc_attr($options['month_size'] ?? '14px');
+    $month_font = !empty($options['month_font']) ? "font-family: '" . esc_attr($options['month_font']) . "';" : '';
+    $month_bold = !empty($options['month_bold']) ? 'font-weight: bold;' : '';
+    $month_italic = !empty($options['month_italic']) ? 'font-style: italic;' : '';
+    $month_underline = !empty($options['month_underline']) ? 'text-decoration: underline;' : '';
+    
+    // Mantener compatibilidad con versiones anteriores
     $date_color = esc_attr($options['date_color'] ?? '#007bff');
     $date_size = esc_attr($options['date_size'] ?? '18px');
     
@@ -72,46 +110,49 @@ function dicalapi_gcalendar_shortcode($atts) {
         
         // Columna de fechas - con estructura clara y estilos inline
         $output .= '<div class="dicalapi-gcalendar-date-column" style="background-color:' . $column1_bg . '">';
-        
-        // Extraer día y mes de la fecha de inicio
+          // Extraer día y mes de la fecha de inicio
         $start_day = date_i18n('j', $event['start_timestamp']);
         $start_month = date_i18n('M', $event['start_timestamp']);
         
-        $output .= '<div class="dicalapi-gcalendar-day" style="color:' . $date_color . ';font-size:' . $date_size . '">' . esc_html($start_day) . '</div>';
-        $output .= '<div class="dicalapi-gcalendar-month" style="color:' . $date_color . '">' . esc_html($start_month) . '</div>';
+        // Estilos inline para día y mes con las nuevas opciones
+        $day_style = "color:{$day_color};font-size:{$day_size};{$day_font}{$day_bold}{$day_italic}{$day_underline}";
+        $month_style = "color:{$month_color};font-size:{$month_size};{$month_font}{$month_bold}{$month_italic}{$month_underline}";
+        
+        $output .= '<div class="dicalapi-gcalendar-day" style="' . $day_style . '">' . esc_html($start_day) . '</div>';
+        $output .= '<div class="dicalapi-gcalendar-month" style="' . $month_style . '">' . esc_html($start_month) . '</div>';
         
         // Si las fechas son diferentes, mostrar la fecha de fin
         if ($event['start_date'] !== $event['end_date']) {
             $end_day = date_i18n('j', $event['end_timestamp']);
             $end_month = date_i18n('M', $event['end_timestamp']);
             
-            $output .= '<div class="dicalapi-gcalendar-day" style="color:' . $date_color . ';font-size:' . $date_size . '">' . esc_html($end_day) . '</div>';
-            $output .= '<div class="dicalapi-gcalendar-month" style="color:' . $date_color . '">' . esc_html($end_month) . '</div>';
+            $output .= '<div class="dicalapi-gcalendar-day" style="' . $day_style . '">' . esc_html($end_day) . '</div>';
+            $output .= '<div class="dicalapi-gcalendar-month" style="' . $month_style . '">' . esc_html($end_month) . '</div>';
         }
         
         $output .= '</div>'; // Fin columna fechas
         
         // Columna de contenido con estilos inline
         $output .= '<div class="dicalapi-gcalendar-content-column" style="background-color:' . $column2_bg . '">';
-        
-        // Título
+          // Título con todos los estilos configurables
         if (!empty($event['title'])) {
-            $output .= '<h3 class="dicalapi-gcalendar-title" style="color:' . $title_color . ';font-size:' . $title_size . '">' . esc_html($event['title']) . '</h3>';
+            $title_style = "color:{$title_color};font-size:{$title_size};{$title_font}{$title_bold}{$title_italic}{$title_underline}{$title_align}";
+            $output .= '<h3 class="dicalapi-gcalendar-title" style="' . $title_style . '">' . esc_html($event['title']) . '</h3>';
         }
-        
-        // Descripción
+          // Descripción con todos los estilos configurables
         if (!empty($event['description'])) {
             // Limitar a 200 caracteres y eliminar HTML
             $description = strip_tags($event['description']);
             if (strlen($description) > 200) {
                 $description = substr($description, 0, 200) . '...';
             }
-            $output .= '<div class="dicalapi-gcalendar-description" style="color:' . $desc_color . ';font-size:' . $desc_size . '">' . esc_html($description) . '</div>';
+            $desc_style = "color:{$desc_color};font-size:{$desc_size};{$desc_font}{$desc_bold}{$desc_italic}{$desc_underline}{$desc_align}";
+            $output .= '<div class="dicalapi-gcalendar-description" style="' . $desc_style . '">' . esc_html($description) . '</div>';
         }
-        
-        // Lugar
+          // Lugar con todos los estilos configurables
         if (!empty($event['location'])) {
-            $output .= '<div class="dicalapi-gcalendar-location" style="color:' . $location_color . ';font-size:' . $location_size . '">';
+            $location_style = "color:{$location_color};font-size:{$location_size};{$location_font}{$location_bold}{$location_italic}{$location_underline}{$location_align}";
+            $output .= '<div class="dicalapi-gcalendar-location" style="' . $location_style . '">';
             $output .= '<span class="dashicons dashicons-location"></span> ';
             $output .= esc_html($event['location']);
             $output .= '</div>';
@@ -471,7 +512,38 @@ function dicalapi_gcalendar_get_event_signup_url($event) {
  * Generar CSS dinámico basado en las opciones
  */
 function dicalapi_gcalendar_generate_dynamic_css($options) {
-    $css = '
+    // Recopilar todas las fuentes Google que se están usando
+    $google_fonts = array();
+    
+    $font_fields = array('title_font', 'desc_font', 'location_font', 'day_font', 'month_font');
+    
+    foreach ($font_fields as $field) {
+        if (!empty($options[$field])) {
+            $font_name = $options[$field];
+            if (!in_array($font_name, $google_fonts)) {
+                $google_fonts[] = $font_name;
+            }
+        }
+    }
+    
+    // Generar la URL de Google Fonts si hay fuentes para cargar
+    $font_url = '';
+    if (!empty($google_fonts)) {
+        $font_families = array();
+        foreach ($google_fonts as $font) {
+            $font_families[] = str_replace(' ', '+', $font) . ':wght@300;400;500;600;700';
+        }
+        $font_url = 'https://fonts.googleapis.com/css2?family=' . implode('&family=', $font_families) . '&display=swap';
+    }
+
+    $css = '';
+    
+    // Agregar la importación de Google Fonts si es necesaria
+    if (!empty($font_url)) {
+        $css .= '@import url("' . $font_url . '");' . "\n";
+    }
+    
+    $css .= '
     .dicalapi-gcalendar-container {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
         margin: 20px 0;
@@ -546,11 +618,13 @@ function dicalapi_gcalendar_generate_dynamic_css($options) {
         background-color: ' . esc_attr($options['button_hover_bg_color'] ?? '#0056b3') . ';
         transform: translateY(-2px);
     }
-    
-    .dicalapi-gcalendar-day {
-        color: ' . esc_attr($options['date_color'] ?? '#007bff') . ';
-        font-size: ' . esc_attr($options['date_size'] ?? '18px') . ';
-        font-weight: bold;
+      .dicalapi-gcalendar-day {
+        color: ' . esc_attr($options['day_color'] ?? $options['date_color'] ?? '#007bff') . ';
+        font-size: ' . esc_attr($options['day_size'] ?? $options['date_size'] ?? '18px') . ';
+        font-family: ' . (!empty($options['day_font']) ? "'" . esc_attr($options['day_font']) . "'" : 'inherit') . ';
+        font-weight: ' . (!empty($options['day_bold']) ? 'bold' : 'normal') . ';
+        font-style: ' . (!empty($options['day_italic']) ? 'italic' : 'normal') . ';
+        text-decoration: ' . (!empty($options['day_underline']) ? 'underline' : 'none') . ';
         line-height: 1.2;
         display: block;
         width: 100%;
@@ -558,8 +632,12 @@ function dicalapi_gcalendar_generate_dynamic_css($options) {
     }
     
     .dicalapi-gcalendar-month {
-        color: ' . esc_attr($options['date_color'] ?? '#007bff') . ';
-        font-size: ' . esc_attr($options['date_size'] ?? '16px') . ';
+        color: ' . esc_attr($options['month_color'] ?? $options['date_color'] ?? '#007bff') . ';
+        font-size: ' . esc_attr($options['month_size'] ?? '14px') . ';
+        font-family: ' . (!empty($options['month_font']) ? "'" . esc_attr($options['month_font']) . "'" : 'inherit') . ';
+        font-weight: ' . (!empty($options['month_bold']) ? 'bold' : 'normal') . ';
+        font-style: ' . (!empty($options['month_italic']) ? 'italic' : 'normal') . ';
+        text-decoration: ' . (!empty($options['month_underline']) ? 'underline' : 'none') . ';
         margin-bottom: 8px;
         line-height: 1.2;
         display: block;
@@ -570,24 +648,38 @@ function dicalapi_gcalendar_generate_dynamic_css($options) {
     .dicalapi-gcalendar-title {
         color: ' . esc_attr($options['title_color'] ?? '#333333') . ';
         font-size: ' . esc_attr($options['title_size'] ?? '18px') . ';
+        font-family: ' . (!empty($options['title_font']) ? "'" . esc_attr($options['title_font']) . "'" : 'inherit') . ';
+        font-weight: ' . (!empty($options['title_bold']) ? 'bold' : 'normal') . ';
+        font-style: ' . (!empty($options['title_italic']) ? 'italic' : 'normal') . ';
+        text-decoration: ' . (!empty($options['title_underline']) ? 'underline' : 'none') . ';
         margin: 0 0 10px;
-        text-align: center;
+        text-align: ' . esc_attr($options['title_align'] ?? 'center') . ';
         width: 100%;
     }
     
     .dicalapi-gcalendar-description {
         color: ' . esc_attr($options['desc_color'] ?? '#666666') . ';
         font-size: ' . esc_attr($options['desc_size'] ?? '14px') . ';
+        font-family: ' . (!empty($options['desc_font']) ? "'" . esc_attr($options['desc_font']) . "'" : 'inherit') . ';
+        font-weight: ' . (!empty($options['desc_bold']) ? 'bold' : 'normal') . ';
+        font-style: ' . (!empty($options['desc_italic']) ? 'italic' : 'normal') . ';
+        text-decoration: ' . (!empty($options['desc_underline']) ? 'underline' : 'none') . ';
         margin-bottom: 10px;
-        text-align: center;
+        text-align: ' . esc_attr($options['desc_align'] ?? 'center') . ';
         width: 100%;
     }
     
     .dicalapi-gcalendar-location {
         color: ' . esc_attr($options['location_color'] ?? '#888888') . ';
         font-size: ' . esc_attr($options['location_size'] ?? '14px') . ';
+        font-family: ' . (!empty($options['location_font']) ? "'" . esc_attr($options['location_font']) . "'" : 'inherit') . ';
+        font-weight: ' . (!empty($options['location_bold']) ? 'bold' : 'normal') . ';
+        font-style: ' . (!empty($options['location_italic']) ? 'italic' : 'normal') . ';
+        text-decoration: ' . (!empty($options['location_underline']) ? 'underline' : 'none') . ';
         display: flex;
         align-items: center;
+        text-align: ' . esc_attr($options['location_align'] ?? 'center') . ';
+        justify-content: ' . (esc_attr($options['location_align'] ?? 'center') == 'center' ? 'center' : (esc_attr($options['location_align'] ?? 'center') == 'left' ? 'flex-start' : 'flex-end')) . ';
         justify-content: center;
         width: 100%;
     }

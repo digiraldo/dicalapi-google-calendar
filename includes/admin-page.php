@@ -21,9 +21,16 @@ function dicalapi_gcalendar_admin_scripts($hook) {
     wp_enqueue_style('wp-color-picker');
     wp_enqueue_script('wp-color-picker');
     
+    // Cargar Google Fonts para el selector de fuentes
+    wp_enqueue_style('dicalapi-google-fonts', 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;600;700&family=Lato:wght@300;400;700&family=Montserrat:wght@300;400;500;700&family=Poppins:wght@300;400;500;600&family=Raleway:wght@300;400;500;600&family=Source+Sans+Pro:wght@300;400;600&family=Ubuntu:wght@300;400;500;700&family=Playfair+Display:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap', array());
+    
+    // Cargar select2 para mejorar selección de fuentes
+    wp_enqueue_style('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css', array());
+    wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', array('jquery'), null, true);
+    
     // Cargar nuestros estilos y scripts
     wp_enqueue_style('dicalapi-gcalendar-admin', DICALAPI_GCALENDAR_PLUGIN_URL . 'assets/css/admin.css', array(), DICALAPI_GCALENDAR_VERSION);
-    wp_enqueue_script('dicalapi-gcalendar-admin', DICALAPI_GCALENDAR_PLUGIN_URL . 'assets/js/admin.js', array('jquery', 'wp-color-picker'), DICALAPI_GCALENDAR_VERSION, true);
+    wp_enqueue_script('dicalapi-gcalendar-admin', DICALAPI_GCALENDAR_PLUGIN_URL . 'assets/js/admin.js', array('jquery', 'wp-color-picker', 'select2'), DICALAPI_GCALENDAR_VERSION, true);
     
     // Cargar Dashicons para iconos
     wp_enqueue_style('dashicons');
@@ -692,7 +699,8 @@ function dicalapi_gcalendar_sanitize_options($input) {
         'column1_bg', 'column2_bg', 'column3_bg',
         'title_color', 'desc_color', 'location_color', 'date_color',
         'button_bg_color', 'button_text_color', 'button_hover_bg_color',
-        'title_text_color', 'title_date_color', 'preview_bg_color'
+        'title_text_color', 'title_date_color', 'preview_bg_color',
+        'day_color', 'month_color'
     );
     
     foreach ($color_fields as $field) {
@@ -707,7 +715,8 @@ function dicalapi_gcalendar_sanitize_options($input) {
     // Sanitizar tamaños de texto (con unidades CSS)
     $size_fields = array(
         'title_size', 'desc_size', 'location_size', 'date_size',
-        'button_text_size', 'title_text_size', 'title_date_size'
+        'button_text_size', 'title_text_size', 'title_date_size',
+        'day_size', 'month_size'
     );
     
     foreach ($size_fields as $field) {
@@ -758,6 +767,61 @@ function dicalapi_gcalendar_sanitize_options($input) {
         }
     } elseif (isset($existing_options['title_scroll_interval'])) {
         $sanitized_input['title_scroll_interval'] = $existing_options['title_scroll_interval'];
+    }
+    
+    // Sanitizar fuentes (solo nombres válidos de Google Fonts)
+    $font_fields = array(
+        'title_font', 'desc_font', 'location_font', 'day_font', 'month_font'
+    );
+    
+    $allowed_fonts = array(
+        '', 'Roboto', 'Open Sans', 'Lato', 'Montserrat', 'Poppins', 
+        'Raleway', 'Source Sans Pro', 'Ubuntu', 'Playfair Display', 'Merriweather'
+    );
+    
+    foreach ($font_fields as $field) {
+        if (isset($input[$field])) {
+            if (in_array($input[$field], $allowed_fonts)) {
+                $sanitized_input[$field] = $input[$field];
+            } else {
+                $sanitized_input[$field] = ''; // Valor por defecto
+            }
+        } elseif (isset($existing_options[$field])) {
+            $sanitized_input[$field] = $existing_options[$field];
+        }
+    }
+    
+    // Sanitizar opciones de estilo de texto (checkboxes)
+    $checkbox_fields = array(
+        'title_bold', 'title_italic', 'title_underline',
+        'desc_bold', 'desc_italic', 'desc_underline',
+        'location_bold', 'location_italic', 'location_underline',
+        'day_bold', 'day_italic', 'day_underline',
+        'month_bold', 'month_italic', 'month_underline'
+    );
+    
+    foreach ($checkbox_fields as $field) {
+        if (isset($input[$field])) {
+            $sanitized_input[$field] = (bool) $input[$field];
+        } elseif (isset($existing_options[$field])) {
+            $sanitized_input[$field] = $existing_options[$field];
+        }
+    }
+    
+    // Sanitizar opciones de alineación
+    $align_fields = array('title_align', 'desc_align', 'location_align');
+    $allowed_alignments = array('left', 'center', 'right');
+    
+    foreach ($align_fields as $field) {
+        if (isset($input[$field])) {
+            if (in_array($input[$field], $allowed_alignments)) {
+                $sanitized_input[$field] = $input[$field];
+            } else {
+                $sanitized_input[$field] = 'center'; // Valor por defecto
+            }
+        } elseif (isset($existing_options[$field])) {
+            $sanitized_input[$field] = $existing_options[$field];
+        }
     }
     
     // Asegurar que todos los demás valores se conserven
@@ -928,40 +992,304 @@ function dicalapi_gcalendar_row_shadow_render() {
 function dicalapi_gcalendar_title_style_render() {
     $options = get_option('dicalapi_gcalendar_options');
     ?>
-    <label><?php _e('Color:', 'dicalapi-gcalendar'); ?></label>
-    <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[title_color]' value='<?php echo esc_attr($options['title_color'] ?? '#333333'); ?>'>
-    <label><?php _e('Tamaño:', 'dicalapi-gcalendar'); ?></label>
-    <input type='text' name='dicalapi_gcalendar_options[title_size]' value='<?php echo esc_attr($options['title_size'] ?? '18px'); ?>'>
+    <div class="dicalapi-style-grid">
+        <div class="dicalapi-style-row">
+            <label><?php _e('Fuente:', 'dicalapi-gcalendar'); ?></label>
+            <select name="dicalapi_gcalendar_options[title_font]" class="dicalapi-font-select">
+                <option value=""><?php _e('Predeterminado', 'dicalapi-gcalendar'); ?></option>
+                <option value="Roboto" <?php selected($options['title_font'] ?? '', 'Roboto'); ?>>Roboto</option>
+                <option value="Open Sans" <?php selected($options['title_font'] ?? '', 'Open Sans'); ?>>Open Sans</option>
+                <option value="Lato" <?php selected($options['title_font'] ?? '', 'Lato'); ?>>Lato</option>
+                <option value="Montserrat" <?php selected($options['title_font'] ?? '', 'Montserrat'); ?>>Montserrat</option>
+                <option value="Poppins" <?php selected($options['title_font'] ?? '', 'Poppins'); ?>>Poppins</option>
+                <option value="Raleway" <?php selected($options['title_font'] ?? '', 'Raleway'); ?>>Raleway</option>
+                <option value="Source Sans Pro" <?php selected($options['title_font'] ?? '', 'Source Sans Pro'); ?>>Source Sans Pro</option>
+                <option value="Ubuntu" <?php selected($options['title_font'] ?? '', 'Ubuntu'); ?>>Ubuntu</option>
+                <option value="Playfair Display" <?php selected($options['title_font'] ?? '', 'Playfair Display'); ?>>Playfair Display</option>
+                <option value="Merriweather" <?php selected($options['title_font'] ?? '', 'Merriweather'); ?>>Merriweather</option>
+            </select>
+        </div>
+        
+        <div class="dicalapi-style-row">
+            <label><?php _e('Color:', 'dicalapi-gcalendar'); ?></label>
+            <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[title_color]' value='<?php echo esc_attr($options['title_color'] ?? '#333333'); ?>'>
+        </div>
+        
+        <div class="dicalapi-style-row">
+            <label><?php _e('Tamaño:', 'dicalapi-gcalendar'); ?></label>
+            <input type='text' class="dicalapi-size-input" name='dicalapi_gcalendar_options[title_size]' value='<?php echo esc_attr($options['title_size'] ?? '18px'); ?>'>
+        </div>
+        
+        <div class="dicalapi-style-row">
+            <label><?php _e('Estilo:', 'dicalapi-gcalendar'); ?></label>
+            <div class="dicalapi-text-style-options">
+                <input type="checkbox" id="title_bold" name="dicalapi_gcalendar_options[title_bold]" value="1" <?php checked($options['title_bold'] ?? false, 1); ?>>
+                <label for="title_bold" title="<?php _e('Negrita', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-bold"></label>
+                
+                <input type="checkbox" id="title_italic" name="dicalapi_gcalendar_options[title_italic]" value="1" <?php checked($options['title_italic'] ?? false, 1); ?>>
+                <label for="title_italic" title="<?php _e('Cursiva', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-italic"></label>
+                
+                <input type="checkbox" id="title_underline" name="dicalapi_gcalendar_options[title_underline]" value="1" <?php checked($options['title_underline'] ?? false, 1); ?>>
+                <label for="title_underline" title="<?php _e('Subrayado', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-underline"></label>
+            </div>
+        </div>
+        
+        <div class="dicalapi-style-row">
+            <label><?php _e('Alineación:', 'dicalapi-gcalendar'); ?></label>
+            <div class="dicalapi-text-align-options">
+                <input type="radio" id="title_align_left" name="dicalapi_gcalendar_options[title_align]" value="left" <?php checked($options['title_align'] ?? 'center', 'left'); ?>>
+                <label for="title_align_left" title="<?php _e('Alinear a la izquierda', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-alignleft"></label>
+                
+                <input type="radio" id="title_align_center" name="dicalapi_gcalendar_options[title_align]" value="center" <?php checked($options['title_align'] ?? 'center', 'center'); ?>>
+                <label for="title_align_center" title="<?php _e('Centrar', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-aligncenter"></label>
+                
+                <input type="radio" id="title_align_right" name="dicalapi_gcalendar_options[title_align]" value="right" <?php checked($options['title_align'] ?? 'center', 'right'); ?>>
+                <label for="title_align_right" title="<?php _e('Alinear a la derecha', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-alignright"></label>
+            </div>
+        </div>
+        
+        <div class="dicalapi-style-preview">
+            <div class="dicalapi-preview-title" id="title_preview">Vista previa del título</div>
+        </div>
+    </div>
     <?php
 }
 
 function dicalapi_gcalendar_desc_style_render() {
     $options = get_option('dicalapi_gcalendar_options');
     ?>
-    <label><?php _e('Color:', 'dicalapi-gcalendar'); ?></label>
-    <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[desc_color]' value='<?php echo esc_attr($options['desc_color'] ?? '#666666'); ?>'>
-    <label><?php _e('Tamaño:', 'dicalapi-gcalendar'); ?></label>
-    <input type='text' name='dicalapi_gcalendar_options[desc_size]' value='<?php echo esc_attr($options['desc_size'] ?? '14px'); ?>'>
+    <div class="dicalapi-style-grid">
+        <div class="dicalapi-style-row">
+            <label><?php _e('Fuente:', 'dicalapi-gcalendar'); ?></label>
+            <select name="dicalapi_gcalendar_options[desc_font]" class="dicalapi-font-select">
+                <option value=""><?php _e('Predeterminado', 'dicalapi-gcalendar'); ?></option>
+                <option value="Roboto" <?php selected($options['desc_font'] ?? '', 'Roboto'); ?>>Roboto</option>
+                <option value="Open Sans" <?php selected($options['desc_font'] ?? '', 'Open Sans'); ?>>Open Sans</option>
+                <option value="Lato" <?php selected($options['desc_font'] ?? '', 'Lato'); ?>>Lato</option>
+                <option value="Montserrat" <?php selected($options['desc_font'] ?? '', 'Montserrat'); ?>>Montserrat</option>
+                <option value="Poppins" <?php selected($options['desc_font'] ?? '', 'Poppins'); ?>>Poppins</option>
+                <option value="Raleway" <?php selected($options['desc_font'] ?? '', 'Raleway'); ?>>Raleway</option>
+                <option value="Source Sans Pro" <?php selected($options['desc_font'] ?? '', 'Source Sans Pro'); ?>>Source Sans Pro</option>
+                <option value="Ubuntu" <?php selected($options['desc_font'] ?? '', 'Ubuntu'); ?>>Ubuntu</option>
+                <option value="Playfair Display" <?php selected($options['desc_font'] ?? '', 'Playfair Display'); ?>>Playfair Display</option>
+                <option value="Merriweather" <?php selected($options['desc_font'] ?? '', 'Merriweather'); ?>>Merriweather</option>
+            </select>
+        </div>
+        
+        <div class="dicalapi-style-row">
+            <label><?php _e('Color:', 'dicalapi-gcalendar'); ?></label>
+            <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[desc_color]' value='<?php echo esc_attr($options['desc_color'] ?? '#666666'); ?>'>
+        </div>
+        
+        <div class="dicalapi-style-row">
+            <label><?php _e('Tamaño:', 'dicalapi-gcalendar'); ?></label>
+            <input type='text' class="dicalapi-size-input" name='dicalapi_gcalendar_options[desc_size]' value='<?php echo esc_attr($options['desc_size'] ?? '14px'); ?>'>
+        </div>
+        
+        <div class="dicalapi-style-row">
+            <label><?php _e('Estilo:', 'dicalapi-gcalendar'); ?></label>
+            <div class="dicalapi-text-style-options">
+                <input type="checkbox" id="desc_bold" name="dicalapi_gcalendar_options[desc_bold]" value="1" <?php checked($options['desc_bold'] ?? false, 1); ?>>
+                <label for="desc_bold" title="<?php _e('Negrita', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-bold"></label>
+                
+                <input type="checkbox" id="desc_italic" name="dicalapi_gcalendar_options[desc_italic]" value="1" <?php checked($options['desc_italic'] ?? false, 1); ?>>
+                <label for="desc_italic" title="<?php _e('Cursiva', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-italic"></label>
+                
+                <input type="checkbox" id="desc_underline" name="dicalapi_gcalendar_options[desc_underline]" value="1" <?php checked($options['desc_underline'] ?? false, 1); ?>>
+                <label for="desc_underline" title="<?php _e('Subrayado', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-underline"></label>
+            </div>
+        </div>
+        
+        <div class="dicalapi-style-row">
+            <label><?php _e('Alineación:', 'dicalapi-gcalendar'); ?></label>
+            <div class="dicalapi-text-align-options">
+                <input type="radio" id="desc_align_left" name="dicalapi_gcalendar_options[desc_align]" value="left" <?php checked($options['desc_align'] ?? 'center', 'left'); ?>>
+                <label for="desc_align_left" title="<?php _e('Alinear a la izquierda', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-alignleft"></label>
+                
+                <input type="radio" id="desc_align_center" name="dicalapi_gcalendar_options[desc_align]" value="center" <?php checked($options['desc_align'] ?? 'center', 'center'); ?>>
+                <label for="desc_align_center" title="<?php _e('Centrar', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-aligncenter"></label>
+                
+                <input type="radio" id="desc_align_right" name="dicalapi_gcalendar_options[desc_align]" value="right" <?php checked($options['desc_align'] ?? 'center', 'right'); ?>>
+                <label for="desc_align_right" title="<?php _e('Alinear a la derecha', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-alignright"></label>
+            </div>
+        </div>
+        
+        <div class="dicalapi-style-preview">
+            <div class="dicalapi-preview-description" id="desc_preview">Vista previa de la descripción</div>
+        </div>
+    </div>
     <?php
 }
 
 function dicalapi_gcalendar_location_style_render() {
     $options = get_option('dicalapi_gcalendar_options');
     ?>
-    <label><?php _e('Color:', 'dicalapi-gcalendar'); ?></label>
-    <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[location_color]' value='<?php echo esc_attr($options['location_color'] ?? '#888888'); ?>'>
-    <label><?php _e('Tamaño:', 'dicalapi-gcalendar'); ?></label>
-    <input type='text' name='dicalapi_gcalendar_options[location_size]' value='<?php echo esc_attr($options['location_size'] ?? '14px'); ?>'>
+    <div class="dicalapi-style-grid">
+        <div class="dicalapi-style-row">
+            <label><?php _e('Fuente:', 'dicalapi-gcalendar'); ?></label>
+            <select name="dicalapi_gcalendar_options[location_font]" class="dicalapi-font-select">
+                <option value=""><?php _e('Predeterminado', 'dicalapi-gcalendar'); ?></option>
+                <option value="Roboto" <?php selected($options['location_font'] ?? '', 'Roboto'); ?>>Roboto</option>
+                <option value="Open Sans" <?php selected($options['location_font'] ?? '', 'Open Sans'); ?>>Open Sans</option>
+                <option value="Lato" <?php selected($options['location_font'] ?? '', 'Lato'); ?>>Lato</option>
+                <option value="Montserrat" <?php selected($options['location_font'] ?? '', 'Montserrat'); ?>>Montserrat</option>
+                <option value="Poppins" <?php selected($options['location_font'] ?? '', 'Poppins'); ?>>Poppins</option>
+                <option value="Raleway" <?php selected($options['location_font'] ?? '', 'Raleway'); ?>>Raleway</option>
+                <option value="Source Sans Pro" <?php selected($options['location_font'] ?? '', 'Source Sans Pro'); ?>>Source Sans Pro</option>
+                <option value="Ubuntu" <?php selected($options['location_font'] ?? '', 'Ubuntu'); ?>>Ubuntu</option>
+                <option value="Playfair Display" <?php selected($options['location_font'] ?? '', 'Playfair Display'); ?>>Playfair Display</option>
+                <option value="Merriweather" <?php selected($options['location_font'] ?? '', 'Merriweather'); ?>>Merriweather</option>
+            </select>
+        </div>
+        
+        <div class="dicalapi-style-row">
+            <label><?php _e('Color:', 'dicalapi-gcalendar'); ?></label>
+            <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[location_color]' value='<?php echo esc_attr($options['location_color'] ?? '#888888'); ?>'>
+        </div>
+        
+        <div class="dicalapi-style-row">
+            <label><?php _e('Tamaño:', 'dicalapi-gcalendar'); ?></label>
+            <input type='text' class="dicalapi-size-input" name='dicalapi_gcalendar_options[location_size]' value='<?php echo esc_attr($options['location_size'] ?? '14px'); ?>'>
+        </div>
+        
+        <div class="dicalapi-style-row">
+            <label><?php _e('Estilo:', 'dicalapi-gcalendar'); ?></label>
+            <div class="dicalapi-text-style-options">
+                <input type="checkbox" id="location_bold" name="dicalapi_gcalendar_options[location_bold]" value="1" <?php checked($options['location_bold'] ?? false, 1); ?>>
+                <label for="location_bold" title="<?php _e('Negrita', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-bold"></label>
+                
+                <input type="checkbox" id="location_italic" name="dicalapi_gcalendar_options[location_italic]" value="1" <?php checked($options['location_italic'] ?? false, 1); ?>>
+                <label for="location_italic" title="<?php _e('Cursiva', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-italic"></label>
+                
+                <input type="checkbox" id="location_underline" name="dicalapi_gcalendar_options[location_underline]" value="1" <?php checked($options['location_underline'] ?? false, 1); ?>>
+                <label for="location_underline" title="<?php _e('Subrayado', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-underline"></label>
+            </div>
+        </div>
+        
+        <div class="dicalapi-style-row">
+            <label><?php _e('Alineación:', 'dicalapi-gcalendar'); ?></label>
+            <div class="dicalapi-text-align-options">
+                <input type="radio" id="location_align_left" name="dicalapi_gcalendar_options[location_align]" value="left" <?php checked($options['location_align'] ?? 'center', 'left'); ?>>
+                <label for="location_align_left" title="<?php _e('Alinear a la izquierda', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-alignleft"></label>
+                
+                <input type="radio" id="location_align_center" name="dicalapi_gcalendar_options[location_align]" value="center" <?php checked($options['location_align'] ?? 'center', 'center'); ?>>
+                <label for="location_align_center" title="<?php _e('Centrar', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-aligncenter"></label>
+                
+                <input type="radio" id="location_align_right" name="dicalapi_gcalendar_options[location_align]" value="right" <?php checked($options['location_align'] ?? 'center', 'right'); ?>>
+                <label for="location_align_right" title="<?php _e('Alinear a la derecha', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-alignright"></label>
+            </div>
+        </div>
+        
+        <div class="dicalapi-style-preview">
+            <div class="dicalapi-preview-location" id="location_preview"><span class="dashicons dashicons-location"></span> Vista previa de la ubicación</div>
+        </div>
+    </div>
     <?php
 }
 
 function dicalapi_gcalendar_date_style_render() {
     $options = get_option('dicalapi_gcalendar_options');
     ?>
-    <label><?php _e('Color:', 'dicalapi-gcalendar'); ?></label>
-    <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[date_color]' value='<?php echo esc_attr($options['date_color'] ?? '#007bff'); ?>'>
-    <label><?php _e('Tamaño:', 'dicalapi-gcalendar'); ?></label>
-    <input type='text' name='dicalapi_gcalendar_options[date_size]' value='<?php echo esc_attr($options['date_size'] ?? '16px'); ?>'>
+    <div class="dicalapi-date-options">
+        <h4><?php _e('Opciones para el día', 'dicalapi-gcalendar'); ?></h4>
+        <div class="dicalapi-style-grid">
+            <div class="dicalapi-style-row">
+                <label><?php _e('Fuente:', 'dicalapi-gcalendar'); ?></label>
+                <select name="dicalapi_gcalendar_options[day_font]" class="dicalapi-font-select">
+                    <option value=""><?php _e('Predeterminado', 'dicalapi-gcalendar'); ?></option>
+                    <option value="Roboto" <?php selected($options['day_font'] ?? '', 'Roboto'); ?>>Roboto</option>
+                    <option value="Open Sans" <?php selected($options['day_font'] ?? '', 'Open Sans'); ?>>Open Sans</option>
+                    <option value="Lato" <?php selected($options['day_font'] ?? '', 'Lato'); ?>>Lato</option>
+                    <option value="Montserrat" <?php selected($options['day_font'] ?? '', 'Montserrat'); ?>>Montserrat</option>
+                    <option value="Poppins" <?php selected($options['day_font'] ?? '', 'Poppins'); ?>>Poppins</option>
+                    <option value="Raleway" <?php selected($options['day_font'] ?? '', 'Raleway'); ?>>Raleway</option>
+                    <option value="Source Sans Pro" <?php selected($options['day_font'] ?? '', 'Source Sans Pro'); ?>>Source Sans Pro</option>
+                    <option value="Ubuntu" <?php selected($options['day_font'] ?? '', 'Ubuntu'); ?>>Ubuntu</option>
+                    <option value="Playfair Display" <?php selected($options['day_font'] ?? '', 'Playfair Display'); ?>>Playfair Display</option>
+                    <option value="Merriweather" <?php selected($options['day_font'] ?? '', 'Merriweather'); ?>>Merriweather</option>
+                </select>
+            </div>
+            
+            <div class="dicalapi-style-row">
+                <label><?php _e('Color:', 'dicalapi-gcalendar'); ?></label>
+                <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[day_color]' value='<?php echo esc_attr($options['day_color'] ?? ($options['date_color'] ?? '#007bff')); ?>'>
+            </div>
+            
+            <div class="dicalapi-style-row">
+                <label><?php _e('Tamaño:', 'dicalapi-gcalendar'); ?></label>
+                <input type='text' class="dicalapi-size-input" name='dicalapi_gcalendar_options[day_size]' value='<?php echo esc_attr($options['day_size'] ?? ($options['date_size'] ?? '18px')); ?>'>
+            </div>
+            
+            <div class="dicalapi-style-row">
+                <label><?php _e('Estilo:', 'dicalapi-gcalendar'); ?></label>
+                <div class="dicalapi-text-style-options">
+                    <input type="checkbox" id="day_bold" name="dicalapi_gcalendar_options[day_bold]" value="1" <?php checked($options['day_bold'] ?? true, 1); ?>>
+                    <label for="day_bold" title="<?php _e('Negrita', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-bold"></label>
+                    
+                    <input type="checkbox" id="day_italic" name="dicalapi_gcalendar_options[day_italic]" value="1" <?php checked($options['day_italic'] ?? false, 1); ?>>
+                    <label for="day_italic" title="<?php _e('Cursiva', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-italic"></label>
+                    
+                    <input type="checkbox" id="day_underline" name="dicalapi_gcalendar_options[day_underline]" value="1" <?php checked($options['day_underline'] ?? false, 1); ?>>
+                    <label for="day_underline" title="<?php _e('Subrayado', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-underline"></label>
+                </div>
+            </div>
+        </div>
+        
+        <h4><?php _e('Opciones para el mes', 'dicalapi-gcalendar'); ?></h4>
+        <div class="dicalapi-style-grid">
+            <div class="dicalapi-style-row">
+                <label><?php _e('Fuente:', 'dicalapi-gcalendar'); ?></label>
+                <select name="dicalapi_gcalendar_options[month_font]" class="dicalapi-font-select">
+                    <option value=""><?php _e('Predeterminado', 'dicalapi-gcalendar'); ?></option>
+                    <option value="Roboto" <?php selected($options['month_font'] ?? '', 'Roboto'); ?>>Roboto</option>
+                    <option value="Open Sans" <?php selected($options['month_font'] ?? '', 'Open Sans'); ?>>Open Sans</option>
+                    <option value="Lato" <?php selected($options['month_font'] ?? '', 'Lato'); ?>>Lato</option>
+                    <option value="Montserrat" <?php selected($options['month_font'] ?? '', 'Montserrat'); ?>>Montserrat</option>
+                    <option value="Poppins" <?php selected($options['month_font'] ?? '', 'Poppins'); ?>>Poppins</option>
+                    <option value="Raleway" <?php selected($options['month_font'] ?? '', 'Raleway'); ?>>Raleway</option>
+                    <option value="Source Sans Pro" <?php selected($options['month_font'] ?? '', 'Source Sans Pro'); ?>>Source Sans Pro</option>
+                    <option value="Ubuntu" <?php selected($options['month_font'] ?? '', 'Ubuntu'); ?>>Ubuntu</option>
+                    <option value="Playfair Display" <?php selected($options['month_font'] ?? '', 'Playfair Display'); ?>>Playfair Display</option>
+                    <option value="Merriweather" <?php selected($options['month_font'] ?? '', 'Merriweather'); ?>>Merriweather</option>
+                </select>
+            </div>
+            
+            <div class="dicalapi-style-row">
+                <label><?php _e('Color:', 'dicalapi-gcalendar'); ?></label>
+                <input type='text' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[month_color]' value='<?php echo esc_attr($options['month_color'] ?? ($options['date_color'] ?? '#007bff')); ?>'>
+            </div>
+            
+            <div class="dicalapi-style-row">
+                <label><?php _e('Tamaño:', 'dicalapi-gcalendar'); ?></label>
+                <input type='text' class="dicalapi-size-input" name='dicalapi_gcalendar_options[month_size]' value='<?php echo esc_attr($options['month_size'] ?? ($options['date_size'] ?? '14px')); ?>'>
+            </div>
+            
+            <div class="dicalapi-style-row">
+                <label><?php _e('Estilo:', 'dicalapi-gcalendar'); ?></label>
+                <div class="dicalapi-text-style-options">
+                    <input type="checkbox" id="month_bold" name="dicalapi_gcalendar_options[month_bold]" value="1" <?php checked($options['month_bold'] ?? false, 1); ?>>
+                    <label for="month_bold" title="<?php _e('Negrita', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-bold"></label>
+                    
+                    <input type="checkbox" id="month_italic" name="dicalapi_gcalendar_options[month_italic]" value="1" <?php checked($options['month_italic'] ?? false, 1); ?>>
+                    <label for="month_italic" title="<?php _e('Cursiva', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-italic"></label>
+                    
+                    <input type="checkbox" id="month_underline" name="dicalapi_gcalendar_options[month_underline]" value="1" <?php checked($options['month_underline'] ?? false, 1); ?>>
+                    <label for="month_underline" title="<?php _e('Subrayado', 'dicalapi-gcalendar'); ?>" class="dashicons dashicons-editor-underline"></label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dicalapi-style-preview date-preview">
+            <div class="dicalapi-preview-date" id="date_preview">
+                <div class="dicalapi-preview-day" id="day_preview">15</div>
+                <div class="dicalapi-preview-month" id="month_preview">May</div>
+            </div>
+        </div>
+        
+        <!-- Mantener el campo antiguo para compatibilidad -->
+        <input type='hidden' class="dicalapi-color-picker" name='dicalapi_gcalendar_options[date_color]' value='<?php echo esc_attr($options['date_color'] ?? '#007bff'); ?>'>
+        <input type='hidden' name='dicalapi_gcalendar_options[date_size]' value='<?php echo esc_attr($options['date_size'] ?? '16px'); ?>'>
+    </div>
     <?php
 }
 
