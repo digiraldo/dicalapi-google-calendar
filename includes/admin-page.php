@@ -851,8 +851,23 @@ function dicalapi_gcalendar_row_shadow_render() {
         '0px 8px 16px rgba(0,0,0,0.25)' => __('Fuerte', 'dicalapi-gcalendar'),
         '0px 12px 24px rgba(0,0,0,0.3)' => __('Muy fuerte', 'dicalapi-gcalendar'),
         '0px 3px 6px rgba(0,0,0,0.1), 0px 6px 12px rgba(0,0,0,0.15)' => __('Doble sombra', 'dicalapi-gcalendar'),
+        // Sombras para fondos oscuros
+        '0px 3px 6px rgba(255,255,255,0.1)' => __('Sutil (modo oscuro)', 'dicalapi-gcalendar'),
+        '0px 5px 10px rgba(255,255,255,0.15)' => __('Media (modo oscuro)', 'dicalapi-gcalendar'),
+        '0px 8px 15px rgba(255,255,255,0.2)' => __('Pronunciada (modo oscuro)', 'dicalapi-gcalendar'),
+        '0px 4px 8px rgba(255,255,255,0.1), 0px 8px 16px rgba(255,255,255,0.15)' => __('Doble (modo oscuro)', 'dicalapi-gcalendar'),
+        // Sombras con colores
         '0px 4px 8px rgba(0,70,150,0.2)' => __('Azul', 'dicalapi-gcalendar'),
         '0px 4px 8px rgba(120,0,0,0.2)' => __('Rojo', 'dicalapi-gcalendar'),
+        '0px 4px 8px rgba(0,120,0,0.2)' => __('Verde', 'dicalapi-gcalendar'),
+        '0px 4px 8px rgba(120,0,120,0.2)' => __('Púrpura', 'dicalapi-gcalendar'),
+        '0px 4px 8px rgba(255,165,0,0.25)' => __('Naranja', 'dicalapi-gcalendar'),
+        // Efectos especiales
+        '0px 1px 3px rgba(0,0,0,0.12), 0px 1px 2px rgba(0,0,0,0.24)' => __('Material Design', 'dicalapi-gcalendar'),
+        '0px 3px 5px -1px rgba(0,0,0,0.2), 0px 6px 10px 0px rgba(0,0,0,0.14), 0px 1px 18px 0px rgba(0,0,0,0.12)' => __('Elevación', 'dicalapi-gcalendar'),
+        '0px 0px 15px rgba(0,0,0,0.1)' => __('Neón suave', 'dicalapi-gcalendar'),
+        '0px 0px 10px 5px rgba(66,133,244,0.3)' => __('Neón azul', 'dicalapi-gcalendar'),
+        '0px 0px 10px 5px rgba(219,68,55,0.3)' => __('Neón rojo', 'dicalapi-gcalendar'),
         'custom' => __('Personalizada', 'dicalapi-gcalendar')
     );
     
@@ -886,8 +901,21 @@ function dicalapi_gcalendar_row_shadow_render() {
         
         <div class="dicalapi-shadow-preview">
             <label><?php _e('Vista previa de la sombra:', 'dicalapi-gcalendar'); ?></label>
-            <div id="dicalapi-shadow-preview-box" style="box-shadow: <?php echo esc_attr($current_shadow); ?>">
-                <?php _e('Ejemplo de sombra', 'dicalapi-gcalendar'); ?>
+            <div class="dicalapi-preview-background-selector">
+                <label><?php _e('Fondo de previsualización:', 'dicalapi-gcalendar'); ?></label>
+                <select id="dicalapi-shadow-preview-background">
+                    <option value="#ffffff"><?php _e('Fondo claro', 'dicalapi-gcalendar'); ?></option>
+                    <option value="#333333"><?php _e('Fondo oscuro', 'dicalapi-gcalendar'); ?></option>
+                    <option value="#f5f5f5"><?php _e('Gris claro', 'dicalapi-gcalendar'); ?></option>
+                    <option value="#1a1a1a"><?php _e('Gris oscuro', 'dicalapi-gcalendar'); ?></option>
+                    <option value="#e6f7ff"><?php _e('Azul claro', 'dicalapi-gcalendar'); ?></option>
+                    <option value="#f0fff0"><?php _e('Verde claro', 'dicalapi-gcalendar'); ?></option>
+                </select>
+            </div>
+            <div id="dicalapi-shadow-preview-container">
+                <div id="dicalapi-shadow-preview-box" style="box-shadow: <?php echo esc_attr($current_shadow); ?>">
+                    <?php _e('Ejemplo de sombra', 'dicalapi-gcalendar'); ?>
+                </div>
             </div>
         </div>
         

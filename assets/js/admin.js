@@ -42,4 +42,23 @@ jQuery(document).ready(function($) {
     } else {
         shadowCustom.hide();
     }
+    
+    // Gestión del selector de color de fondo para previsualización
+    const previewBackground = $('#dicalapi-shadow-preview-background');
+    const previewContainer = $('#dicalapi-shadow-preview-container');
+    const previewBox = $('#dicalapi-shadow-preview-box');
+    
+    previewBackground.on('change', function() {
+        const bgColor = $(this).val();
+        previewContainer.css('background-color', bgColor);
+        
+        // Cambiar el color del texto del box según el fondo
+        if (bgColor === '#333333' || bgColor === '#1a1a1a') {
+            previewBox.css('color', '#ffffff');
+            previewBox.css('border-color', '#555');
+        } else {
+            previewBox.css('color', '#333333');
+            previewBox.css('border-color', '#ddd');
+        }
+    });
 });
