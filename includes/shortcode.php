@@ -138,16 +138,20 @@ function dicalapi_gcalendar_shortcode($atts) {
         if (!empty($event['title'])) {
             $title_style = "color:{$title_color};font-size:{$title_size};{$title_font}{$title_bold}{$title_italic}{$title_underline}{$title_align}";
             $output .= '<h3 class="dicalapi-gcalendar-title" style="' . $title_style . '">' . esc_html($event['title']) . '</h3>';
-        }
-          // Descripción con todos los estilos configurables
+        }          // Descripción con todos los estilos configurables
         if (!empty($event['description'])) {
-            // Limitar a 200 caracteres y eliminar HTML
-            $description = strip_tags($event['description']);
-            if (strlen($description) > 200) {
-                $description = substr($description, 0, 200) . '...';
+            // Limpiar códigos especiales [signup_url:...] y [name_btn:...] de la descripción
+            $description = dicalapi_gcalendar_clean_event_description($event['description']);
+            
+            // Continuar solo si hay descripción después de la limpieza
+            if (!empty($description)) {
+                // Limitar a 200 caracteres
+                if (strlen($description) > 200) {
+                    $description = substr($description, 0, 200) . '...';
+                }
+                $desc_style = "color:{$desc_color};font-size:{$desc_size};{$desc_font}{$desc_bold}{$desc_italic}{$desc_underline}{$desc_align}";
+                $output .= '<div class="dicalapi-gcalendar-description" style="' . $desc_style . '">' . esc_html($description) . '</div>';
             }
-            $desc_style = "color:{$desc_color};font-size:{$desc_size};{$desc_font}{$desc_bold}{$desc_italic}{$desc_underline}{$desc_align}";
-            $output .= '<div class="dicalapi-gcalendar-description" style="' . $desc_style . '">' . esc_html($description) . '</div>';
         }
           // Lugar con todos los estilos configurables
         if (!empty($event['location'])) {
@@ -162,12 +166,11 @@ function dicalapi_gcalendar_shortcode($atts) {
         
         // Nueva columna de inscripción con estilos inline
         $output .= '<div class="dicalapi-gcalendar-signup-column" style="background-color:' . $column3_bg . '">';
-        
-        // Verificar si hay una URL específica para este evento (en la descripción)
+          // Verificar si hay una URL específica para este evento (en la descripción)
         $signup_url = dicalapi_gcalendar_get_event_signup_url($event);
         
-        // Obtener texto del botón de las opciones
-        $button_text = !empty($options['signup_button_text']) ? $options['signup_button_text'] : __('Inscribirse', 'dicalapi-gcalendar');
+        // Obtener texto del botón personalizado del evento o usar el predeterminado
+        $button_text = dicalapi_gcalendar_get_event_button_name($event);
         
         // Solo mostrar el botón si hay una URL configurada
         if (!empty($signup_url)) {
@@ -506,6 +509,50 @@ function dicalapi_gcalendar_get_event_signup_url($event) {
     
     // Si no se encuentra un patrón específico, usar la URL por defecto
     return $default_url;
+}
+
+/**
+ * Extraer nombre de botón personalizado de un evento
+ * Busca un nombre específico en la descripción o usa el texto por defecto
+ */
+function dicalapi_gcalendar_get_event_button_name($event) {
+    $options = get_option('dicalapi_gcalendar_options');
+    $default_text = !empty($options['signup_button_text']) ? $options['signup_button_text'] : __('Inscribirse', 'dicalapi-gcalendar');
+    
+    // Si no hay descripción, usar el texto por defecto
+    if (empty($event['description'])) {
+        return $default_text;
+    }
+    
+    // Buscar patrones como [name_btn:Texto Personalizado] en la descripción
+    $pattern = '/\[name_btn:([^\]]+)\]/i';
+    if (preg_match($pattern, $event['description'], $matches)) {
+        // Sanitizar el texto extraído para prevenir XSS
+        return sanitize_text_field(trim($matches[1]));
+    }
+    
+    // Si no se encuentra un patrón específico, usar el texto por defecto
+    return $default_text;
+}
+
+/**
+ * Limpiar descripción del evento removiendo códigos especiales
+ * Remueve [signup_url:...] y [name_btn:...] de la descripción
+ */
+function dicalapi_gcalendar_clean_event_description($description) {
+    if (empty($description)) {
+        return '';
+    }
+    
+    // Remover patrones [signup_url:...] y [name_btn:...]
+    $description = preg_replace('/\[signup_url:[^\]]+\]/i', '', $description);
+    $description = preg_replace('/\[name_btn:[^\]]+\]/i', '', $description);
+    
+    // Limpiar espacios en blanco extra y sanitizar
+    $description = trim($description);
+    $description = sanitize_textarea_field($description);
+    
+    return $description;
 }
 
 /**

@@ -204,6 +204,29 @@ Puedes establecer una URL de inscripción específica para cada evento añadiend
 
 Esto sobrescribirá la URL predeterminada configurada en el panel de administración, solo para ese evento específico.
 
+## 🏷️ Texto Personalizado para Botones
+
+Puedes personalizar el texto del botón de inscripción para cada evento específico añadiendo este código en la descripción del evento en Google Calendar:
+
+```
+[name_btn:Regístrate ahora]
+```
+
+Esto sobrescribirá el texto predeterminado del botón configurado en el panel de administración, solo para ese evento específico.
+
+### 🎯 Ejemplo Completo
+
+Puedes combinar ambas funcionalidades en la descripción de un evento:
+
+```
+Descripción del evento aquí. Este evento será genial y aprenderás mucho.
+
+[signup_url:https://formulario.com/evento-especial] 
+[name_btn:¡Apúntate ya!]
+```
+
+> **💡 Nota importante:** Los códigos especiales `[signup_url:...]` y `[name_btn:...]` se eliminarán automáticamente de la descripción mostrada al público, manteniendo solo el texto descriptivo limpio.
+
 ---
 
 ## 🛠️ Solución de Problemas Comunes

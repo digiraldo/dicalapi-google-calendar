@@ -426,8 +426,7 @@ function dicalapi_gcalendar_options_page() {
                                     </ul>
                                 </div>
                             </div>
-                            
-                            <h2><?php _e('URLs personalizadas para eventos', 'dicalapi-gcalendar'); ?></h2>
+                              <h2><?php _e('URLs personalizadas para eventos', 'dicalapi-gcalendar'); ?></h2>
                             <p><?php _e('Para definir una URL de inscripción específica para un evento, añade este código en la descripción del evento en Google Calendar:', 'dicalapi-gcalendar'); ?></p>
                             <div class="shortcode-example large">
                                 <code>[signup_url:https://tuformulario.com/inscripcion]</code>
@@ -435,6 +434,20 @@ function dicalapi_gcalendar_options_page() {
                             
                             <div class="dicalapi-help-note">
                                 <p><?php _e('Esta URL sobrescribirá la URL predeterminada configurada en este panel solo para ese evento específico.', 'dicalapi-gcalendar'); ?></p>
+                            </div>
+                            
+                            <h2><?php _e('Texto personalizado para botones de inscripción', 'dicalapi-gcalendar'); ?></h2>
+                            <p><?php _e('Para personalizar el texto del botón de inscripción de un evento específico, añade este código en la descripción del evento en Google Calendar:', 'dicalapi-gcalendar'); ?></p>
+                            <div class="shortcode-example large">
+                                <code>[name_btn:Regístrate ahora]</code>
+                            </div>
+                            
+                            <div class="dicalapi-help-note">
+                                <p><?php _e('Este texto sobrescribirá el texto predeterminado del botón configurado en este panel solo para ese evento específico. Se puede combinar con [signup_url:...] para personalizar completamente la acción de inscripción.', 'dicalapi-gcalendar'); ?></p>
+                                <p><strong><?php _e('Ejemplo completo:', 'dicalapi-gcalendar'); ?></strong></p>
+                                <div class="shortcode-example">
+                                    <code>Descripción del evento aquí. [signup_url:https://formulario.com/evento1] [name_btn:¡Apúntate ya!]</code>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1611,12 +1624,23 @@ function dicalapi_gcalendar_settings_page() {
             <p><?php _e('También puedes especificar un número personalizado de eventos a mostrar:', 'dicalapi-gcalendar'); ?></p>
             <code>[dicalapi-gcalendar-titulo max_events="5"]</code>
         </div>
-        
-        <div class="dicalapi-url-custom-info">
+          <div class="dicalapi-url-custom-info">
             <h2><?php _e('Cómo configurar URLs específicas para eventos individuales', 'dicalapi-gcalendar'); ?></h2>
             <p><?php _e('Puedes configurar una URL de inscripción personalizada para cada evento incluyendo el siguiente código en la descripción del evento en Google Calendar:', 'dicalapi-gcalendar'); ?></p>
             <code>[signup_url:https://tuformulario.com/inscripcion]</code>
             <p><?php _e('Esto sobrescribirá la URL predeterminada configurada en este panel solo para ese evento específico.', 'dicalapi-gcalendar'); ?></p>
+            
+            <h2><?php _e('Cómo personalizar el texto del botón de inscripción', 'dicalapi-gcalendar'); ?></h2>
+            <p><?php _e('Puedes personalizar el texto del botón de inscripción para cada evento específico incluyendo el siguiente código en la descripción del evento en Google Calendar:', 'dicalapi-gcalendar'); ?></p>
+            <code>[name_btn:Regístrate ahora]</code>
+            <p><?php _e('Esto sobrescribirá el texto predeterminado del botón configurado en este panel solo para ese evento específico.', 'dicalapi-gcalendar'); ?></p>
+            
+            <h3><?php _e('Ejemplo completo', 'dicalapi-gcalendar'); ?></h3>
+            <p><?php _e('Puedes combinar ambas funcionalidades en la descripción de un evento:', 'dicalapi-gcalendar'); ?></p>
+            <div class="shortcode-example large">
+                <code>Descripción del evento aquí. [signup_url:https://formulario.com/evento1] [name_btn:¡Apúntate ya!]</code>
+            </div>
+            <p><?php _e('Los códigos especiales se eliminarán automáticamente de la descripción mostrada al público, manteniendo solo el texto descriptivo.', 'dicalapi-gcalendar'); ?></p>
         </div>
     </div>
     <?php

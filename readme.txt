@@ -38,6 +38,7 @@ DICALAPI Google Calendar Events es un plugin que permite mostrar eventos de Goog
 * Colores y tamaños para textos (títulos, descripciones, fechas)
 * Intervalo de rotación para el ticker de títulos
 * URL de inscripción predeterminada y por evento
+* Texto personalizado para botones de inscripción por evento
 
 = Licencia =
 
